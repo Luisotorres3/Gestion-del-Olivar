@@ -1,5 +1,6 @@
 {
   "name": "gestion_del_olivar",
+  "homepage": "https://luisotorres3.github.io/Gestion-del-Olivar",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
