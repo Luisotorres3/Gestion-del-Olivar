@@ -1,0 +1,144 @@
+/* CONTACT PAGE CSS */
+
+/* Contact - Contenedor general*/
+.container {
+  height: 100%;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth; /* Agrega una transición suave al desplazamiento */
+}
+
+/* Contact - Sections*/
+.section {
+  height: 100%;
+  scroll-snap-align: start;
+  display: flex; /* Hace que las secciones utilicen flexbox para el contenido */
+}
+
+/* Contact - Content*/
+.content {
+  flex: 1; /* Permite que el contenido se expanda para llenar el espacio disponible */
+  display: flex;
+  flex-direction: column;
+  padding: 0 100px 0 100px; /* Agrega relleno al contenido */
+  justify-content: space-around;
+}
+
+/* Contact - About Me*/
+.aboutMe {
+  display: flex;
+  margin: 20px; /* Agrega margen inferior */
+}
+
+.aboutMe img {
+  width: 200px;
+  height: auto; /* Ajusta la altura automáticamente según el ancho */
+  object-fit: cover;
+  filter: drop-shadow(0 0 0.75rem crimson);
+}
+
+.infoAboutMe {
+  margin-left: 20px;
+}
+
+/* Contact - About Project*/
+.aboutProject {
+  display: grid;
+  grid-template-columns: 1fr 2fr 2fr;
+  align-items: center; /* Centra el contenido verticalmente */
+}
+
+.aboutContent {
+  margin: 20px;
+  height: 100%;
+}
+
+.links {
+  display: flex;
+  justify-content: end;
+}
+
+.links li {
+  list-style: none;
+  width: 100%;
+  border-bottom: 1px solid #bbb;
+  margin-bottom: 10px;
+}
+.links ul {
+  width: 100%;
+}
+.links a {
+  text-decoration: none;
+  width: 100%;
+  color: black;
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.2em;
+}
+
+.TFGOwner {
+}
+
+/* */
+.h3Contact {
+}
+
+.tecnologias {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+.cardTools {
+  width: 12rem;
+  display: flex;
+  flex-direction: column;
+}
+.cardHerramienta {
+  position: relative;
+  width: 16dvw;
+  height: 16dvw;
+  display: flex;
+  justify-content: space-around;
+  background-color: white;
+  border-radius: 50%;
+  margin: 0 15px;
+}
+
+.cardHerramienta img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 0.2px solid #bbb;
+  object-fit: contain;
+}
+
+.cardHerramienta h1 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.cardHerramienta:hover img {
+  opacity: 0.05;
+}
+
+.cardHerramienta:hover {
+  background-color: black;
+  border-radius: 50%;
+}
+
+.cardHerramienta:hover h1 {
+  opacity: 1;
+  color: white;
+}
+
+.cardLogo {
+  width: 100px;
+  height: 100px;
+}

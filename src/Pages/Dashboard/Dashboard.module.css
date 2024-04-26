@@ -1,0 +1,206 @@
+/* DASHBOARD CSS*/
+.container h2,
+.container p {
+  font-size: 1.2dvw !important;
+}
+
+/* Dashboard - Contenedor general*/
+.container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  padding: 40px 40px 0 40px;
+}
+
+.content {
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  display: flex;
+  justify-content: start;
+}
+
+/* Dashboard - Estadisticas*/
+.estadisticas {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 20px;
+}
+.secundario {
+  width: 40%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.contentDiv {
+  height: 35%;
+  width: 100%;
+  background-color: white;
+  box-shadow: 1px 1px 7px rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  border-radius: 8px;
+}
+.contentDiv:not(:first-child) {
+  margin-top: 8px;
+}
+
+.cardContent {
+  display: flex;
+  height: 20%;
+  width: 100%;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.mapContent {
+  height: 100%;
+  border-radius: 8px;
+}
+
+.smallMap {
+  padding: 0;
+}
+
+/* Dashboard - Notificationes*/
+.notificationsDiv {
+  height: 25%;
+}
+.notifications {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+}
+
+.notifications ul {
+  padding: 0;
+}
+
+.notifications li {
+  list-style: none;
+  margin-bottom: 5px;
+  border-bottom: 1px solid #bbb;
+}
+
+/* Dashboard - Alertas*/
+.alertas {
+  padding: 20px 20px 0 20px;
+  height: fit-content;
+  font-size: 1.3rem;
+  position: absolute;
+  right: 0;
+  height: auto;
+}
+.navAlertas {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+}
+
+.navAlertas ul {
+  padding: 0;
+}
+
+.navAlertas li {
+  list-style: none;
+  border-bottom: 1px solid black;
+  font-size: 16px;
+  padding: 10px;
+}
+
+.forecast {
+  position: relative;
+  width: 100%;
+  height: 40%;
+  overflow: auto;
+  z-index: 1;
+  padding: 0;
+}
+
+.forecastContent {
+  padding: 5px 20px 20px 20px;
+  height: 100%;
+  position: relative;
+  /* Asegúrate de que el contenido esté encima del video */
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.buttonMasForecast {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+}
+
+/* RESPONSIVE */
+
+@media screen and (max-width: 768px) {
+  .content {
+    flex-direction: column;
+    height: auto;
+  }
+  .content p {
+    font-size: 20px !important;
+  }
+
+  .estadisticas {
+    padding: 20px 20px 0 20px;
+  }
+
+  .contentDiv {
+    margin: 0;
+    padding: 0;
+    height: 300px;
+  }
+
+  .secundario {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .mapContent {
+    height: 300px;
+  }
+
+  .cardContent {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    height: auto;
+  }
+  .cardContent > div {
+    height: auto;
+    padding: auto;
+    margin: 4px 0 4px 0 !important;
+  }
+
+  .cardContent :nth-child(even) {
+    margin-left: 4px !important;
+  }
+  .cardContent :nth-child(odd) {
+    margin-right: 4px !important;
+  }
+}

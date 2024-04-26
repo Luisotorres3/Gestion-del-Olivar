@@ -1,0 +1,48 @@
+/* ACCOUNT DETAILS CSS*/
+
+/* Account Details - Div general*/
+.container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+/*------------------------*/
+
+/* Account Details - Contenido*/
+.content {
+  width: 40%;
+  border-radius: 20px;
+  border: 1px solid #bbb;
+}
+/*------------------------*/
+
+/* Account Details - Titulo*/
+.title {
+  padding: 20px;
+}
+/*------------------------*/
+
+/* Account Details - Elementos*/
+.card {
+  padding: 10px 10px 0 10px;
+  width: 50%;
+}
+/*------------------------*/
+
+/* Account Details - Botones*/
+.buttons {
+  padding: 0 20px 20px 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.buttonsEditar button {
+  box-shadow: 1px 1px 7px rgba(0, 0, 0, 0.5);
+}
+
+.buttonsEditar button:not(:first-child) {
+  margin-left: 10px;
+}
+/*------------------------*/

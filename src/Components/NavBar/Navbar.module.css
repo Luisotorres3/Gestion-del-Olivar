@@ -1,0 +1,191 @@
+/* NAVBAR CSS*/
+
+/* NavBar - Contenedor general*/
+.navbar {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  box-shadow: 1px 1px 7px rgba(0, 0, 0, 0.15);
+  transition: all 0.7s ease;
+}
+
+/* NavBar - Logo*/
+.navbarLogo {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+.navbarLogo a {
+  text-decoration: none;
+  color: black;
+}
+.navbarLogo img {
+  width: 50px;
+  height: 50px;
+  filter: drop-shadow(0 0 0.1rem green);
+}
+.toggleButton {
+  cursor: pointer;
+  font-size: 3em;
+  display: flex;
+  justify-content: center;
+}
+.toggleButtonCollapsed {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+/* NavBar - Content*/
+.navbarContent {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* NavBar - Links*/
+.navbarContentLinks {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+}
+.navbarContentLinks ul {
+  height: 100%;
+  list-style-type: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbarContentLinks li {
+  padding: 10px;
+}
+
+.navbarContentLinks img {
+  width: 90px;
+}
+
+.navLink {
+  color: black;
+  text-decoration: none;
+  font-size: 1.2em;
+  width: 100%;
+}
+.navLinkCollapsed {
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+}
+.logoutLink {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  font-size: 1em;
+}
+.linksNavbar {
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  margin-top: 15px;
+}
+.linksNavbar:hover {
+  border-left: 7px solid green;
+  cursor: pointer;
+}
+
+.selectedLink {
+  background-color: #ddd; /* Cambia el color de fondo del enlace activo */
+  color: black; /* Cambia el color del texto del enlace activo */
+}
+
+.linksNavbarCollapsed {
+  justify-content: center;
+}
+.navLink i {
+  font-size: 1.4em;
+}
+
+/* NavBar - Account*/
+.navbarContentAccount {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 0 20px 0 20px;
+}
+
+.navbarContentAccount img {
+  width: 50px;
+  border-radius: 50%;
+  border: 0.2px solid #bbb;
+  margin-right: 3px;
+}
+
+.divUserDetails {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9em;
+}
+.divUserDetails a {
+  padding: 10px;
+}
+
+/* RESPONSIVE */
+
+@media screen and (max-width: 768px) {
+  .navbar {
+    position: relative !important;
+    z-index: 1;
+    height: fit-content;
+    flex-direction: row;
+    width: 100% !important;
+    justify-content: space-between;
+  }
+  .linksNavbar {
+    padding: 8px !important;
+    margin: 0;
+  }
+  .linksNavbar:hover {
+    border-left: none;
+    cursor: pointer;
+  }
+
+  .selectedLink {
+    background-color: #ddd;
+  }
+  .navbarLogo h3 {
+    display: none;
+  }
+
+  .toggleButton {
+    display: none;
+  }
+
+  .navbarContent {
+    flex-direction: row;
+    justify-content: space-evenly;
+    width: 100%;
+  }
+
+  .navbarContentLinks ul {
+    flex-direction: row;
+    justify-content: space-evenly;
+    margin: 0;
+  }
+
+  .navbarContentLinks ul li {
+    display: none !important;
+  }
+
+  .divUserDetails span {
+    display: none;
+  }
+
+  .navbarContentAccount {
+    padding: 8px;
+    margin: 0;
+  }
+}

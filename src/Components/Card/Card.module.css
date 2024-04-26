@@ -1,0 +1,56 @@
+/* DASHBOARD CSS*/
+
+/* Dashboard - Contenedor general*/
+
+.card {
+  padding: 20px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+  width: 100%;
+  background-color: white;
+  box-shadow: 1px 1px 7px rgba(0, 0, 0, 0.15);
+}
+
+.card:hover {
+  transform: scale(1.04);
+  border: none;
+}
+
+.card:not(:first-child) {
+  margin-left: 8px;
+}
+
+.cardContent {
+  display: flex;
+  height: 65%;
+  align-items: center;
+}
+.cardTitle {
+  width: 100%;
+  height: 20%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cardTitle p {
+  margin: 0;
+}
+.cardTitle img {
+  height: auto;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.cardContent h4 {
+  font-weight: bold;
+}
+
+.extra {
+  height: 15%;
+  color: brown;
+}
