@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./Contact.module.css";
 import Card from "react-bootstrap/Card";
+import axios from "axios";
 
 function AboutMe() {
   return (
@@ -108,6 +109,7 @@ function CardTechs() {
     <>
       {herramientas.map((item, i) => (
         <CardHerramienta
+          key={i}
           className={styles.cardTools}
           title={item.nombre}
           img={item.imagen}
@@ -130,6 +132,24 @@ function ToolsUsed() {
 }
 
 const Contact = () => {
+  const [titt, setTitt] = useState("");
+
+  useEffect(() => {
+    axios
+      .get(
+        `https://us-central1-gestiondelolivar-48d30.cloudfunctions.net/app/api/fincas/1`
+      )
+      .then((response) => {
+        // La solicitud se completó correctamente
+        setTitt(response.data.name);
+        console.log(response.data);
+      })
+      .catch((error) => {
+        // Ocurrió un error en la solicitud
+        console.error("!Correct", error);
+      });
+  }, []); // Ejecutar el efecto solo una vez al montar el componente
+
   return (
     <div className={styles.container}>
       <section className={styles.section}>
@@ -190,7 +210,7 @@ const Contact = () => {
       <section className={styles.section}>
         <div className={styles.content}>
           <div className={styles.contentTarjetas}>
-            <h1>Tecnologías y herramientas utilizadas</h1>
+            <h1>A{titt ? titt : " b"}</h1>
             <div className={styles.tecnologias}>
               <TechUsed />
             </div>

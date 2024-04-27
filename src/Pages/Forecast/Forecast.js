@@ -1,24 +1,34 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./Forecast.module.css";
+import {
+  fetchWeather,
+  getFincas,
+} from "../../Utils/Firebase/databaseFunctions";
 
-function ForecastInfoGeneral() {
-  const [selectedOption, setSelectedOption] = useState("");
-
+function SelectFincas({ selectedFinca, handleChange }) {
+  return (
+    <select value={selectedFinca} onChange={handleChange}>
+      {getFincas().map((item) => (
+        <option key={item.id} value={item.localizacion.municipio}>
+          {item.localizacion.municipio}
+        </option>
+      ))}
+    </select>
+  );
+}
+function ForecastInfoGeneral({ selectedFinca, setSelectedFinca }) {
   // Función para manejar el cambio de selección
   const handleChange = (event) => {
-    setSelectedOption(event.target.value);
+    setSelectedFinca(event.target.value);
   };
   return (
     <>
       <div className="d-flex justify-content-between">
         <h2>Hola Luis</h2>
-        <select value={selectedOption} onChange={handleChange}>
-          {/* Opciones del desplegable */}
-          <option value="">Selecciona una opción</option>
-          <option value="opcion1">Opción 1</option>
-          <option value="opcion2">Opción 2</option>
-          <option value="opcion3">Opción 3</option>
-        </select>
+        <SelectFincas
+          selectedFinca={selectedFinca}
+          handleChange={handleChange}
+        />
       </div>
       <div>
         <h1>11.40</h1>
@@ -42,17 +52,17 @@ function ForecastInfoGeneral() {
 }
 
 function ForecastStatus() {
-  const [selectedOption, setSelectedOption] = useState("");
+  const [selectedFinca, setselectedFinca] = useState("");
 
   // Función para manejar el cambio de selección
   const handleChange = (event) => {
-    setSelectedOption(event.target.value);
+    setselectedFinca(event.target.value);
   };
   return (
     <>
       <div className="d-flex justify-content-between">
         <h3>Status</h3>
-        <select value={selectedOption} onChange={handleChange}>
+        <select value={selectedFinca} onChange={handleChange}>
           {/* Opciones del desplegable */}
           <option value="">Selecciona una opción</option>
           <option value="opcion1">Opción 1</option>
@@ -96,14 +106,30 @@ function DayForecast({ day }) {
   );
 }
 
-function SecondaryDiv() {
-  const [selectedOption, setSelectedOption] = useState("");
+function SecondaryDiv({ selectedFinca, setSelectedFinca }) {
   const days = [1, 2, 3, 4, 5];
+  const [temperature, setTemperature] = useState(null);
 
   // Función para manejar el cambio de selección
   const handleChange = (event) => {
-    setSelectedOption(event.target.value);
+    setSelectedFinca(event.target.value);
   };
+
+  useEffect(() => {
+    const fetchTemperature = async () => {
+      try {
+        const data = await fetchWeather(selectedFinca);
+        setTemperature(data.main.temp);
+      } catch (error) {
+        console.error("Error fetching weather data:", error);
+      }
+    };
+
+    if (selectedFinca) {
+      fetchTemperature();
+    }
+  }, [selectedFinca]);
+
   return (
     <div className="border">
       <div className="d-flex flex-column align-items-center">
@@ -113,7 +139,7 @@ function SecondaryDiv() {
             style={{ width: "100px" }}
           />
         </div>
-        <h1>20ºC</h1>
+        <h1>{temperature}ºC</h1>
         <h3>Cloudy</h3>
         <div className="w-25">
           <div className="d-flex justify-content-between align-items-center">
@@ -131,7 +157,7 @@ function SecondaryDiv() {
       <div>
         <div className="d-flex justify-content-between mt-4">
           <h2>Weather Forecast</h2>
-          <select value={selectedOption} onChange={handleChange}>
+          <select value={selectedFinca} onChange={handleChange}>
             {/* Opciones del desplegable */}
             <option value="">Selecciona una opción</option>
             <option value="opcion1">Opción 1</option>
@@ -142,7 +168,7 @@ function SecondaryDiv() {
         <div>
           <ul className="list-group border-0">
             {days.map((number) => (
-              <DayForecast day={number} />
+              <DayForecast day={number} key={number} />
             ))}
           </ul>
         </div>
@@ -152,13 +178,17 @@ function SecondaryDiv() {
 }
 
 const Forecast = () => {
+  const [selectedFinca, setSelectedFinca] = useState(null);
   return (
     <div className={`container-fluid ${styles.container}`}>
       <div className={styles.content}>
         <div className={`d-flex ${styles.insideContent}`}>
           <div className={`${styles.info} ${styles.main}`}>
             <div className={styles.divInterior}>
-              <ForecastInfoGeneral />
+              <ForecastInfoGeneral
+                selectedFinca={selectedFinca}
+                setSelectedFinca={setSelectedFinca}
+              />
             </div>
             <div className={styles.divInterior}>
               <ForecastStatus />
@@ -168,7 +198,10 @@ const Forecast = () => {
             </div>
           </div>
           <div className={`${styles.info} ${styles.secondary}`}>
-            <SecondaryDiv />
+            <SecondaryDiv
+              selectedFinca={selectedFinca}
+              setSelectedFinca={setSelectedFinca}
+            />
           </div>
         </div>
       </div>

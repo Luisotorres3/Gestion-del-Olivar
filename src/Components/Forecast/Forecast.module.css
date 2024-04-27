@@ -26,11 +26,11 @@
 
 .title p {
   margin: 0;
-  font-size: 1.2rem;
-  width: 33%;
+  width: -webkit-fill-available;
 }
 
 .title h2 {
   font-weight: bold;
   width: 33%;
+  margin: 0 !important;
 }

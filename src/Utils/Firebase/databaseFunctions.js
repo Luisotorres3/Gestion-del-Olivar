@@ -119,21 +119,16 @@ export const getCoordsForMarker = () => {
 };
 
 export const getLocations = () => {
-  const locations = [
-    { id: 1, location: "Madrid" },
-    { id: 2, location: "Barcelona" },
-    { id: 3, location: "Murcia" },
-    { id: 4, location: "Granada" },
-    { id: 5, location: "Jaén" },
-  ];
-  return locations.slice(0, 5);
+  const fincas = getFincas();
+  const locations = fincas.map((finca) => finca.localizacion.municipio);
+  return locations.slice(0, 5); // Si solo quieres los primeros 5 IDs
 };
 
 export const fetchAllTemps = async (locations) => {
   let tempMedia = 0;
 
   for (const item of locations) {
-    const data = await fetchWeather(item.location);
+    const data = await fetchWeather(item);
     tempMedia += Math.round(data.main.temp);
   }
   return tempMedia;
@@ -158,7 +153,7 @@ export const getAlerts = () => {
 export const fetchWeather = async (city) => {
   try {
     const response = await axios.get(
-      `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=10febab50520dc67582eed976e016d80&units=metric`
+      `https://api.openweathermap.org/data/2.5/weather?q=${city},es&appid=10febab50520dc67582eed976e016d80&units=metric`
     );
 
     return response.data;

@@ -128,9 +128,7 @@ function ForecastInformation({ locations, handleShowMoreForecast }) {
       <div className={styles.forecastContent}>
         {locations &&
           locations.length > 0 &&
-          locations.map((item) => (
-            <Forecast key={item.location} location={item.location} />
-          ))}
+          locations.map((item, i) => <Forecast key={i} location={item} />)}
         <div className={styles.buttonMasForecast}>
           <i
             className="fa fa-plus-circle"
