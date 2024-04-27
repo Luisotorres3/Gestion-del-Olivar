@@ -4,6 +4,8 @@
 /node_modules
 /.pnp
 .pnp.js
+/src/Components/Authentication/Account/Firebase.js
+/src/Components/Authentication/Account/Auth.js
 
 # testing
 /coverage
