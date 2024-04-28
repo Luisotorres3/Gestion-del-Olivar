@@ -134,7 +134,8 @@ function ToolsUsed() {
 const Contact = () => {
   const [titt, setTitt] = useState("");
 
-  useEffect(() => {
+  /* 
+    useEffect(() => {
     axios
       .get(
         `https://us-central1-gestiondelolivar-48d30.cloudfunctions.net/app/api/fincas/1`
@@ -149,6 +150,7 @@ const Contact = () => {
         console.error("!Correct", error);
       });
   }, []); // Ejecutar el efecto solo una vez al montar el componente
+  */
 
   return (
     <div className={styles.container}>

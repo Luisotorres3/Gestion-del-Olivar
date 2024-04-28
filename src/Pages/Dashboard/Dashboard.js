@@ -7,7 +7,7 @@ import olive from "../../Images/Icons/oliveTree.png";
 import weather from "../../Images/Icons/weather.png";
 import production from "../../Images/Icons/production.png";
 import MapComp from "../../Components/Map/Map";
-import Forecast from "../../Components/Forecast/Forecast";
+import Forecast from "../../Components/ForecastComp/ForecastComp";
 import Carousel from "../../Utils/AlertsCarrousel";
 import video from "../../Images/Videos/weatherVideo.mp4";
 import {

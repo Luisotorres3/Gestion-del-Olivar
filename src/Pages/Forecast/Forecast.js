@@ -78,17 +78,16 @@ function ForecastStatus() {
 function ForecastAnalysis() {
   return (
     <>
-      <div></div>
-      <div></div>
+      <div>A</div>
     </>
   );
 }
 
 function DayForecast({ day }) {
   return (
-    <li className="list-group-item mt-1 border-bottom w-100">
-      <div className="d-flex justify-content-between">
-        <div>
+    <li className={styles.dayList}>
+      <div className={styles.dayForecastIndividual}>
+        <div className="d-flex justify-content-center align-items-center">
           <img
             src={require("../../Images/UGR.png")}
             style={{ width: "35px" }}
@@ -98,7 +97,7 @@ function DayForecast({ day }) {
           <h5>Miercoles, 24 Abril</h5>
           <p>Lluvia</p>
         </div>
-        <div>
+        <div className="d-flex justify-content-center align-items-center">
           <p>18ºC</p>
         </div>
       </div>
@@ -131,8 +130,8 @@ function SecondaryDiv({ selectedFinca, setSelectedFinca }) {
   }, [selectedFinca]);
 
   return (
-    <div className="border">
-      <div className="d-flex flex-column align-items-center">
+    <div className={styles.contentSecondaryDiv}>
+      <div className="d-flex flex-column justify-content-center align-items-center h-100">
         <div>
           <img
             src={require("../../Images/UGR.png")}
@@ -154,7 +153,7 @@ function SecondaryDiv({ selectedFinca, setSelectedFinca }) {
           </div>
         </div>
       </div>
-      <div>
+      <div className="h-100">
         <div className="d-flex justify-content-between mt-4">
           <h2>Weather Forecast</h2>
           <select value={selectedFinca} onChange={handleChange}>
@@ -165,7 +164,7 @@ function SecondaryDiv({ selectedFinca, setSelectedFinca }) {
             <option value="opcion3">Opción 3</option>
           </select>
         </div>
-        <div>
+        <div className={styles.divWeekForecast}>
           <ul className="list-group border-0">
             {days.map((number) => (
               <DayForecast day={number} key={number} />
@@ -178,30 +177,41 @@ function SecondaryDiv({ selectedFinca, setSelectedFinca }) {
 }
 
 const Forecast = () => {
-  const [selectedFinca, setSelectedFinca] = useState(null);
+  const [selectedFinca, setSelectedFinca] = useState(
+    getFincas()[0].localizacion.municipio
+  );
   return (
     <div className={`container-fluid ${styles.container}`}>
       <div className={styles.content}>
         <div className={`d-flex ${styles.insideContent}`}>
           <div className={`${styles.info} ${styles.main}`}>
             <div className={styles.divInterior}>
-              <ForecastInfoGeneral
-                selectedFinca={selectedFinca}
-                setSelectedFinca={setSelectedFinca}
-              />
+              <div className={styles.interiorWithBackground}>
+                <ForecastInfoGeneral
+                  selectedFinca={selectedFinca}
+                  setSelectedFinca={setSelectedFinca}
+                />
+              </div>
             </div>
             <div className={styles.divInterior}>
               <ForecastStatus />
             </div>
-            <div className={styles.divInterior}>
-              <ForecastAnalysis />
+            <div className="d-flex w-100">
+              <div className={`${styles.divInterior} w-100 h-100`}>
+                <ForecastAnalysis />
+              </div>
+              <div className={`${styles.divInterior} w-100 h-100`}>
+                <ForecastAnalysis />
+              </div>
             </div>
           </div>
           <div className={`${styles.info} ${styles.secondary}`}>
-            <SecondaryDiv
-              selectedFinca={selectedFinca}
-              setSelectedFinca={setSelectedFinca}
-            />
+            <div className={styles.secondaryInsideDiv}>
+              <SecondaryDiv
+                selectedFinca={selectedFinca}
+                setSelectedFinca={setSelectedFinca}
+              />
+            </div>
           </div>
         </div>
       </div>

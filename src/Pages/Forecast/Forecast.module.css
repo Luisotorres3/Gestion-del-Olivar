@@ -34,8 +34,31 @@ p {
 }
 
 .divInterior {
-  padding: 20px;
   border: 1px solid;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background-image: url("../../Images/Rain.jpg");
+  background-size: cover;
+  color: white;
+  background-position: center; /* Centra la imagen en el contenedor */
+  width: 100%; /* Ajusta el ancho al 100% del contenedor */
+}
+
+.interiorWithBackground {
+  background-color: rgba(2, 2, 66, 0.5);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 1px 1px 7px rgba(0, 0, 0, 0.8);
+}
+
+.divInterior select {
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  background-color: rgba(119, 119, 138, 0.5);
+  color: white;
+  font-weight: bold;
 }
 
 .main {
@@ -44,4 +67,49 @@ p {
 
 .secondary {
   width: 30%;
+  height: 100%;
+  color: white;
+}
+
+.secondaryInsideDiv {
+  height: 100%;
+  padding: 20px;
+  background-color: rgba(2, 2, 66, 0.8);
+  border-radius: 8px;
+}
+
+.divWeekForecast {
+  width: 100%;
+}
+
+.divWeekForecast ul {
+  width: 100%;
+}
+
+.dayForecastIndividual {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  padding: 4px;
+  border-bottom: 1px solid rgba(156, 156, 158, 0.4);
+  margin-bottom: 4px;
+}
+
+.dayForecastIndividual p {
+  margin: 0;
+}
+
+.dayList {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: auto;
+}
+
+.contentSecondaryDiv {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }

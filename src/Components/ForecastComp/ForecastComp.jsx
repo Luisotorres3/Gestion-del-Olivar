@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import styles from "./Forecast.module.css";
+import styles from "./ForecastComp.module.css";
 import { fetchWeather } from "../../Utils/Firebase/databaseFunctions";
 
 const Forecast = ({ location }) => {

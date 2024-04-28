@@ -1,5 +1,4 @@
 /* DASHBOARD CSS*/
-.container h2,
 .container p {
   font-size: 1.2dvw !important;
 }
@@ -161,13 +160,14 @@
   .content {
     flex-direction: column;
     height: auto;
+    padding: 0;
   }
   .content p {
     font-size: 20px !important;
   }
 
   .estadisticas {
-    padding: 20px 20px 0 20px;
+    padding: 10px 10px 0 10px;
   }
 
   .contentDiv {
@@ -187,20 +187,16 @@
 
   .cardContent {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    height: auto;
+    grid-template-columns: 1fr;
+    height: min-content;
+    gap: 0;
   }
   .cardContent > div {
-    height: auto;
+    height: min-content;
     padding: auto;
     margin: 4px 0 4px 0 !important;
   }
-
-  .cardContent :nth-child(even) {
-    margin-left: 4px !important;
-  }
-  .cardContent :nth-child(odd) {
-    margin-right: 4px !important;
+  .card {
+    margin: 0;
   }
 }
