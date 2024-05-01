@@ -92,7 +92,7 @@ tr:hover {
   padding: 0;
   height: 100% !important;
   border-right: 1px solid #bbb;
-  font-size: 1.3rem !important;
+  font-size: 1dvw !important;
 }
 .infoDiv p {
   width: 100%;
@@ -108,7 +108,11 @@ tr:hover {
   background-color: white;
   border-radius: 8px;
   box-shadow: 1px 1px 7px rgba(0, 0, 0, 0.5);
-  padding: 20px;
+  padding: 4px 20px;
   margin-bottom: 8px;
   height: 100%;
+}
+
+.buttons {
+  margin-bottom: 8px;
 }

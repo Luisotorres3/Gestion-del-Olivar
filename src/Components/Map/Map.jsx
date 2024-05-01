@@ -8,149 +8,260 @@ import Feature from "ol/Feature.js";
 import { Point, Polygon } from "ol/geom.js";
 import { Vector as VectorLayer } from "ol/layer.js";
 import { Vector as VectorSource } from "ol/source.js";
-import { fromLonLat } from "ol/proj";
+import { fromLonLat, toLonLat } from "ol/proj";
 import { Fill, Icon, Stroke, Style } from "ol/style";
-import pushpinIcon from "../../Images/Icons/pushpin.png";
+import Overlay from "ol/Overlay";
 import { FullScreen, defaults as defaultControls } from "ol/control.js";
+import { Tooltip } from "bootstrap";
+import styles from "./Map.module.css";
+import { toStringHDMS } from "ol/coordinate";
+import { getCenter } from "ol/extent";
 
 const MapComp = forwardRef((props, ref) => {
   const { width, height, target, zoom, markerCoords, controls, showFincas } =
     props;
   const mapRef = useRef();
-  const [mapLocation, setMapLocation] = useState([-416653.71, 4588115.81]);
 
   useEffect(() => {
-    // Crear una capa de dibujo para los rectángulos
-    const rectangleLayer = new VectorLayer({
-      source: new VectorSource(),
-    });
-
-    // Definir el estilo del rectángulo
-    const rectangleStyle = new Style({
-      stroke: new Stroke({
-        color: "red",
-        width: 2,
-      }),
-      fill: new Fill({
-        color: "rgba(255, 0, 0, 0.2)",
-      }),
-    });
-
-    // Coordenadas del rectángulo centrado en Ubeda
-    const rectangleCoords = [
-      [mapLocation[0] - 100, mapLocation[1] - 100],
-      [mapLocation[0] - 100, mapLocation[1] + 100],
-      [mapLocation[0] + 100, mapLocation[1] + 100],
-      [mapLocation[0] + 100, mapLocation[1] - 100],
-      [mapLocation[0] - 100, mapLocation[1] - 100],
-    ];
-
-    // Crear la geometría del rectángulo
-    const rectangleFeature = new Feature(new Polygon([rectangleCoords]));
-
-    if (showFincas) {
-      // Añadir el rectángulo a la capa con el estilo definido
-      rectangleFeature.setStyle(rectangleStyle);
-      rectangleLayer.getSource().addFeature(rectangleFeature);
-    }
-
-    // Crear una capa de marcadores
-    const markerLayer = new VectorLayer({
-      source: new VectorSource(),
-    });
-
-    // Definir el estilo del marcador como una chincheta
-    const pinStyle = new Style({
-      image: new Icon({
-        anchor: [0.5, 1],
-        anchorXUnits: "fraction",
-        anchorYUnits: "fraction",
-        src: "https://static.vecteezy.com/system/resources/thumbnails/011/421/138/small_2x/glossy-red-push-pin-png.png", // Aquí debes especificar la URL del icono de la chincheta
-        scale: 0.05, // Escala del icono
+    const fullScreenControl = new FullScreen({ tipLabel: "Pantalla Completa" });
+    const map = new Map({
+      controls: controls ? defaultControls().extend([fullScreenControl]) : [],
+      target: target || "map",
+      layers: [
+        new TileLayer({
+          source: new BingMaps({
+            key: "AjTZltKJNAFnrogNQ6CU-n90SLSLW0Y_HYbHotW3_awnrsAa5VmGJhdICmiaJNmf",
+            imagerySet: "Aerial",
+          }),
+        }),
+      ],
+      view: new View({
+        center: [-416653.71, 4588115.81],
+        zoom: zoom,
+        maxZoom: 19,
       }),
     });
 
-    if (markerCoords) {
-      // Añadir los marcadores a la capa con el estilo de chincheta
-      markerCoords.forEach((coord) => {
-        const point = new Point(fromLonLat(coord));
-        const marker = new Feature({
-          geometry: point,
-        });
-        marker.setStyle(pinStyle);
-        markerLayer.getSource().addFeature(marker);
+    mapRef.current = map;
+
+    fullScreenControl.on("enterfullscreen", () => {
+      // Cambiar el contenido del tooltip cuando se entra en pantalla completa
+      const tooltipElements = document.querySelectorAll(".ol-full-screen-true");
+      tooltipElements.forEach((el) => {
+        const tooltip = Tooltip.getInstance(el);
+        if (tooltip) {
+          tooltip.setContent({
+            ".tooltip-inner": "Salir de pantalla completa",
+          });
+          // Agregar evento para ocultar el tooltip cuando el cursor sale del botón
+          el.addEventListener("mouseleave", () => {
+            tooltip.hide();
+          });
+        }
       });
-    }
+    });
 
-    // Configurar el mapa de Bing Maps
+    fullScreenControl.on("leavefullscreen", () => {
+      // Restaurar el contenido original del tooltip cuando se sale de pantalla completa
+      const tooltipElements = document.querySelectorAll(
+        ".ol-full-screen-false"
+      );
+      tooltipElements.forEach((el) => {
+        const tooltip = Tooltip.getInstance(el);
+        if (tooltip) {
+          tooltip.setContent({ ".tooltip-inner": "Pantalla Completa" });
+          // Eliminar el evento 'mouseleave' para evitar que se oculte el tooltip cuando el cursor sale del botón
+          el.removeEventListener("mouseleave", () => {
+            tooltip.hide();
+          });
+        }
+      });
+    });
+
     if (controls) {
-      mapRef.current = new Map({
-        controls: defaultControls().extend([new FullScreen()]),
-        target: target || "map",
-        layers: [
-          new TileLayer({
-            source: new BingMaps({
-              key: "AjTZltKJNAFnrogNQ6CU-n90SLSLW0Y_HYbHotW3_awnrsAa5VmGJhdICmiaJNmf",
-              imagerySet: "Aerial",
-            }),
-          }),
-          markerLayer, // Añadir la capa de marcadores al mapa
-          rectangleLayer,
-        ],
-        view: new View({
-          center: mapLocation,
-          zoom: zoom,
-          maxZoom: 19,
-        }),
-      });
-    } else {
-      mapRef.current = new Map({
-        controls: [],
-        target: target || "map",
-        layers: [
-          new TileLayer({
-            source: new BingMaps({
-              key: "AjTZltKJNAFnrogNQ6CU-n90SLSLW0Y_HYbHotW3_awnrsAa5VmGJhdICmiaJNmf",
-              imagerySet: "Aerial",
-            }),
-          }),
-          markerLayer, // Añadir la capa de marcadores al mapa
-        ],
-        view: new View({
-          center: mapLocation,
-          zoom: zoom,
-          minZoom: zoom,
-          maxZoom: 19,
-        }),
-      });
+      document
+        .querySelectorAll(
+          ".ol-zoom-in, .ol-zoom-out, .ol-rotate-reset, .ol-full-screen-false,.ol-full-screen-true"
+        )
+        .forEach(function (el) {
+          new Tooltip(el);
+        });
     }
 
     return () => {
-      // Limpieza al desmontar el componente
       if (mapRef.current) {
         mapRef.current.setTarget(null);
       }
     };
-  }, [mapLocation, target]);
+  }, [target, zoom, controls]);
 
-  // Pasa la referencia a través de props
+  useEffect(() => {
+    if (mapRef.current && showFincas) {
+      const overlay = new Overlay({
+        element: null, // El elemento se establecerá dinámicamente
+        positioning: "center-center", // Posicionamiento del popup
+        autoPan: true, // Permitir el auto-ajuste del popup
+        autoPanAnimation: {
+          duration: 250, // Duración de la animación de auto-ajuste
+        },
+      });
+
+      mapRef.current.addOverlay(overlay);
+      const rectangleCoords = [
+        [-416753.71, 4588015.81],
+        [-416753.71, 4588215.81],
+        [-416553.71, 4588215.81],
+        [-416553.71, 4588015.81],
+        [-416753.71, 4588015.81],
+      ];
+
+      const features = [];
+      const rectangleFeature = new Feature({
+        geometry: new Polygon([rectangleCoords]),
+        fincaName: "Finca",
+      });
+      features.push(rectangleFeature);
+
+      const rectangleLayer = new VectorLayer({
+        source: new VectorSource({
+          features: features,
+        }),
+        style: new Style({
+          stroke: new Stroke({
+            color: "red",
+            width: 2,
+          }),
+          fill: new Fill({
+            color: "rgba(255, 0, 0, 0.5)",
+          }),
+        }),
+      });
+
+      mapRef.current.addLayer(rectangleLayer);
+
+      mapRef.current.on("pointermove", function (evt) {
+        const container = document.createElement("div");
+        const content = document.createElement("div");
+        container.className = styles.olPopup2;
+        container.appendChild(content);
+
+        // Agregar evento para ocultar el popup cuando el cursor sale del marcador
+
+        overlay.setElement(container);
+        const feature = mapRef.current.forEachFeatureAtPixel(
+          evt.pixel,
+          function (feature) {
+            return feature;
+          }
+        );
+        if (feature) {
+          content.innerHTML = feature.get("fincaName");
+          // Obtener la geometría del feature
+          const geometry = feature.getGeometry();
+
+          if (geometry instanceof Polygon) {
+            // Obtener la extensión de la geometría
+            const extent = geometry.getExtent();
+
+            // Calcular el centro de la extensión
+            const center = getCenter(extent);
+
+            // Establecer la posición del overlay en el centro de la geometría
+            overlay.setPosition(center);
+          } else {
+            // Si la geometría no es un polígono, usar la coordenada del evento
+            overlay.setPosition(evt.coordinate);
+          }
+        } else {
+          // Si no hay ningún marcador bajo el cursor, ocultar el popup
+          overlay.setPosition(undefined);
+        }
+      });
+    }
+  }, [showFincas]);
+
+  useEffect(() => {
+    if (mapRef.current && markerCoords) {
+      const overlay = new Overlay({
+        element: null,
+        positioning: "center-center",
+        autoPan: {
+          animation: {
+            duration: 250,
+          },
+        },
+      });
+
+      mapRef.current.addOverlay(overlay);
+
+      const features = [];
+      markerCoords.forEach((coord) => {
+        const [lat, lon] = coord.coordenadas;
+        const point = new Point(fromLonLat([lon, lat]));
+        const marker = new Feature({
+          geometry: point,
+          municipio: coord.municipio,
+        });
+        features.push(marker);
+      });
+
+      const markerLayer = new VectorLayer({
+        source: new VectorSource({
+          features: features,
+        }),
+        style: new Style({
+          image: new Icon({
+            anchor: [0.5, 1],
+            anchorXUnits: "fraction",
+            anchorYUnits: "fraction",
+            src: "https://static.vecteezy.com/system/resources/thumbnails/011/421/138/small_2x/glossy-red-push-pin-png.png",
+            scale: 0.05,
+          }),
+        }),
+      });
+
+      mapRef.current.addLayer(markerLayer);
+      mapRef.current.getView().setMinZoom(5);
+      mapRef.current.getView().setCenter(fromLonLat([-3.703582, 40.416705]));
+
+      mapRef.current.on("pointermove", function (evt) {
+        const content = document.createElement("div");
+        const container = document.createElement("div");
+        container.className = styles.olPopup;
+        container.appendChild(content);
+        // Agregar evento para ocultar el popup cuando el cursor sale del marcador
+        container.onmouseleave = function () {
+          overlay.setPosition(undefined);
+          return false;
+        };
+        overlay.setElement(container);
+        const feature = mapRef.current.forEachFeatureAtPixel(
+          evt.pixel,
+          function (feature) {
+            return feature;
+          }
+        );
+        function toTitleCase(str) {
+          return str.charAt(0).toUpperCase() + str.substring(1).toLowerCase();
+        }
+
+        if (feature) {
+          const coordinates = feature.getGeometry().getCoordinates();
+          content.innerHTML = toTitleCase(feature.get("municipio"));
+          overlay.setPosition(coordinates);
+        } else {
+          // Si no hay ningún marcador bajo el cursor, ocultar el popup
+          overlay.setPosition(undefined);
+        }
+      });
+    }
+  }, [markerCoords]);
+
   useEffect(() => {
     if (ref) {
       ref.current = mapRef.current;
     }
   }, [ref]);
-
-  document.querySelectorAll("canvas").forEach((canvas, index) => {
-    canvas.id = "canvasId";
-  });
-
-  const elements = document.getElementsByClassName("ol-viewport");
-
-  // Iterar sobre cada elemento y aplicar estilos
-  for (let i = 0; i < elements.length; i++) {
-    const element = elements[i];
-    element.style.borderRadius = "8px";
-  }
 
   return (
     <div

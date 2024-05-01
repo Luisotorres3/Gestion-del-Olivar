@@ -5,26 +5,50 @@ import {
   getFincas,
 } from "../../Utils/Firebase/databaseFunctions";
 
+const iconURL = "http://openweathermap.org/img/wn/";
+
 function SelectFincas({ selectedFinca, handleChange }) {
+  const [fincas, setFincas] = useState([]);
+
+  useEffect(() => {
+    async function fetchFincas() {
+      try {
+        const data = await getFincas();
+        setFincas(data.data);
+      } catch (error) {
+        console.error("Hubo un error al obtener las fincas:", error);
+      }
+    }
+
+    fetchFincas();
+  }, []);
   return (
-    <select value={selectedFinca} onChange={handleChange}>
-      {getFincas().map((item) => (
-        <option key={item.id} value={item.localizacion.municipio}>
-          {item.localizacion.municipio}
-        </option>
-      ))}
-    </select>
+    fincas && (
+      <select value={selectedFinca} onChange={handleChange}>
+        {fincas.map((item) => (
+          <option key={item.id} value={item.data.localizacion.municipio}>
+            {item.data.localizacion.municipio}
+          </option>
+        ))}
+      </select>
+    )
   );
 }
-function ForecastInfoGeneral({ selectedFinca, setSelectedFinca }) {
+function ForecastInfoGeneral({
+  selectedFinca,
+  setSelectedFinca,
+  weatherSelectedFinca,
+}) {
   // Función para manejar el cambio de selección
   const handleChange = (event) => {
     setSelectedFinca(event.target.value);
   };
   return (
     <>
-      <div className="d-flex justify-content-between">
-        <h2>Hola Luis</h2>
+      <div
+        className={`d-flex justify-content-between ${styles.infoGeneralSelect}`}
+      >
+        <h2>Bienvenido</h2>
         <SelectFincas
           selectedFinca={selectedFinca}
           handleChange={handleChange}
@@ -42,8 +66,8 @@ function ForecastInfoGeneral({ selectedFinca, setSelectedFinca }) {
         </div>
         <div>
           <img
-            src={require("../../Images/UGR.png")}
-            style={{ width: "100px" }}
+            src={`${iconURL}${weatherSelectedFinca.weather[0].icon}@4x.png`}
+            style={{ width: "auto" }}
           />
         </div>
       </div>
@@ -105,20 +129,93 @@ function DayForecast({ day }) {
   );
 }
 
-function SecondaryDiv({ selectedFinca, setSelectedFinca }) {
+function SecondaryDiv({
+  selectedFinca,
+  setSelectedFinca,
+  weatherSelectedFinca,
+}) {
   const days = [1, 2, 3, 4, 5];
-  const [temperature, setTemperature] = useState(null);
 
   // Función para manejar el cambio de selección
   const handleChange = (event) => {
     setSelectedFinca(event.target.value);
   };
 
+  return (
+    <div className={styles.contentSecondaryDiv}>
+      {weatherSelectedFinca && (
+        <>
+          <div className="d-flex flex-column align-items-center h-100">
+            <div>
+              <img
+                src={`http://openweathermap.org/img/wn/${weatherSelectedFinca.weather[0].icon}@2x.png`}
+                style={{ width: "100px" }}
+              />
+            </div>
+            <h1>{weatherSelectedFinca.main.temp}ºC</h1>
+            <h3>Cloudy</h3>
+            <div className="w-25">
+              <div className="d-flex justify-content-between align-items-center">
+                <i className="fa fa-thermometer-empty" aria-hidden="true"></i>
+                <p>|</p>
+                <p>100</p>
+              </div>
+              <div className="d-flex justify-content-between align-items-center">
+                <i className="fa fa-thermometer-empty" aria-hidden="true"></i>
+                <p>|</p>
+                <p>100</p>
+              </div>
+            </div>
+          </div>
+          <div className={styles.contentListDays}>
+            <div className="d-flex justify-content-between">
+              <h2>Weather Forecast</h2>
+              <select value={selectedFinca} onChange={handleChange}>
+                {/* Opciones del desplegable */}
+                <option value="">Selecciona una opción</option>
+                <option value="opcion1">Opción 1</option>
+                <option value="opcion2">Opción 2</option>
+                <option value="opcion3">Opción 3</option>
+              </select>
+            </div>
+            <div className={styles.divWeekForecast}>
+              <ul className="list-group border-0">
+                {days.map((number) => (
+                  <DayForecast day={number} key={number} />
+                ))}
+              </ul>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+const Forecast = () => {
+  const [selectedFinca, setSelectedFinca] = useState(null);
+  const [fincas, setFincas] = useState([]);
+  const [weatherSelectedFinca, setWeatherSelectedFinca] = useState(null);
+
+  useEffect(() => {
+    const fetchFinca = async () => {
+      try {
+        const fincaData = await getFincas();
+        setFincas(fincaData.data);
+        setSelectedFinca(fincaData.data[0].data.localizacion.municipio);
+      } catch (error) {
+        console.error("Error al obtener la finca:", error);
+      }
+    };
+
+    fetchFinca();
+  }, []);
+
   useEffect(() => {
     const fetchTemperature = async () => {
       try {
         const data = await fetchWeather(selectedFinca);
-        setTemperature(data.main.temp);
+        setWeatherSelectedFinca(data);
       } catch (error) {
         console.error("Error fetching weather data:", error);
       }
@@ -130,91 +227,44 @@ function SecondaryDiv({ selectedFinca, setSelectedFinca }) {
   }, [selectedFinca]);
 
   return (
-    <div className={styles.contentSecondaryDiv}>
-      <div className="d-flex flex-column justify-content-center align-items-center h-100">
-        <div>
-          <img
-            src={require("../../Images/UGR.png")}
-            style={{ width: "100px" }}
-          />
-        </div>
-        <h1>{temperature}ºC</h1>
-        <h3>Cloudy</h3>
-        <div className="w-25">
-          <div className="d-flex justify-content-between align-items-center">
-            <i className="fa fa-thermometer-empty" aria-hidden="true"></i>
-            <p>|</p>
-            <p>100</p>
-          </div>
-          <div className="d-flex justify-content-between align-items-center">
-            <i className="fa fa-thermometer-empty" aria-hidden="true"></i>
-            <p>|</p>
-            <p>100</p>
-          </div>
-        </div>
-      </div>
-      <div className="h-100">
-        <div className="d-flex justify-content-between mt-4">
-          <h2>Weather Forecast</h2>
-          <select value={selectedFinca} onChange={handleChange}>
-            {/* Opciones del desplegable */}
-            <option value="">Selecciona una opción</option>
-            <option value="opcion1">Opción 1</option>
-            <option value="opcion2">Opción 2</option>
-            <option value="opcion3">Opción 3</option>
-          </select>
-        </div>
-        <div className={styles.divWeekForecast}>
-          <ul className="list-group border-0">
-            {days.map((number) => (
-              <DayForecast day={number} key={number} />
-            ))}
-          </ul>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const Forecast = () => {
-  const [selectedFinca, setSelectedFinca] = useState(
-    getFincas()[0].localizacion.municipio
-  );
-  return (
     <div className={`container-fluid ${styles.container}`}>
-      <div className={styles.content}>
-        <div className={`d-flex ${styles.insideContent}`}>
-          <div className={`${styles.info} ${styles.main}`}>
-            <div className={styles.divInterior}>
-              <div className={styles.interiorWithBackground}>
-                <ForecastInfoGeneral
+      {selectedFinca && (
+        <div className={styles.content}>
+          <div className={`d-flex ${styles.insideContent}`}>
+            <div className={`${styles.info} ${styles.main}`}>
+              <div className={styles.divInterior}>
+                <div className={styles.interiorWithBackground}>
+                  <ForecastInfoGeneral
+                    selectedFinca={selectedFinca}
+                    setSelectedFinca={setSelectedFinca}
+                    weatherSelectedFinca={weatherSelectedFinca}
+                  />
+                </div>
+              </div>
+              <div className={styles.divInterior}>
+                <ForecastStatus />
+              </div>
+              <div className="d-flex w-100">
+                <div className={`${styles.divInterior} w-100 h-100`}>
+                  <ForecastAnalysis />
+                </div>
+                <div className={`${styles.divInterior} w-100 h-100`}>
+                  <ForecastAnalysis />
+                </div>
+              </div>
+            </div>
+            <div className={`${styles.info} ${styles.secondary}`}>
+              <div className={styles.secondaryInsideDiv}>
+                <SecondaryDiv
                   selectedFinca={selectedFinca}
                   setSelectedFinca={setSelectedFinca}
+                  weatherSelectedFinca={weatherSelectedFinca}
                 />
               </div>
             </div>
-            <div className={styles.divInterior}>
-              <ForecastStatus />
-            </div>
-            <div className="d-flex w-100">
-              <div className={`${styles.divInterior} w-100 h-100`}>
-                <ForecastAnalysis />
-              </div>
-              <div className={`${styles.divInterior} w-100 h-100`}>
-                <ForecastAnalysis />
-              </div>
-            </div>
-          </div>
-          <div className={`${styles.info} ${styles.secondary}`}>
-            <div className={styles.secondaryInsideDiv}>
-              <SecondaryDiv
-                selectedFinca={selectedFinca}
-                setSelectedFinca={setSelectedFinca}
-              />
-            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

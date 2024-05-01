@@ -62,11 +62,11 @@ p {
 }
 
 .main {
-  width: 70%;
+  width: 65%;
 }
 
 .secondary {
-  width: 30%;
+  width: 35%;
   height: 100%;
   color: white;
 }
@@ -112,4 +112,35 @@ p {
   display: flex;
   flex-direction: column;
   height: 100%;
+}
+
+.contentListDays {
+  height: 100%;
+  overflow: auto;
+}
+.contentListDays h5 {
+  margin: 0;
+}
+.contentListDays h2 {
+  font-size: x-large;
+}
+
+/* RESPONSIVE */
+
+@media screen and (max-width: 768px) {
+  .content {
+    padding: 0;
+  }
+  .insideContent {
+    flex-direction: column;
+    width: 100%;
+  }
+  .main,
+  .secondary {
+    width: 100%;
+  }
+
+  .infoGeneralSelect {
+    flex-direction: column;
+  }
 }

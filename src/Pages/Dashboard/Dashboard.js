@@ -13,6 +13,7 @@ import video from "../../Images/Videos/weatherVideo.mp4";
 import {
   getAlerts,
   getCoordsForMarker,
+  getFincas,
   getLocations,
   getNumFincas,
   getNumFincasNuevas,
@@ -69,6 +70,7 @@ function Alertas({ alerts, showAlerts, handleShowAlerts }) {
 
 function InformationCards() {
   const [tempMedia, setTempMedia] = useState(null);
+  const [numFincas, setNumFincas] = useState(0);
 
   useEffect(() => {
     const obtenerTemperaturaMedia = async () => {
@@ -80,37 +82,53 @@ function InformationCards() {
       }
     };
 
+    async function fetchFincas() {
+      try {
+        const data = await getFincas();
+        setNumFincas(data.data.length);
+      } catch (error) {
+        console.error("Hubo un error al obtener las fincas:", error);
+        // Manejar el error según sea necesario
+      }
+    }
+
+    fetchFincas();
+
     obtenerTemperaturaMedia();
   }, []);
 
   return (
     <>
-      <Card
-        title={"Fincas"}
-        content={getNumFincas()}
-        extra={getNumFincasNuevas() + " nuevas"}
-        img={plantation}
-      />
-      <Card
-        title={"Olivos"}
-        content={getNumOlivos()}
-        extra={getNumOlivos() / getNumFincas() + " olivos medios por finca"}
-        img={olive}
-      />
-      {tempMedia !== null ? (
-        <Card
-          title={"Temperatura media"}
-          content={tempMedia + "ºC"}
-          img={weather}
-        />
+      {tempMedia ? (
+        <>
+          <Card
+            title={"Fincas"}
+            content={numFincas}
+            extra={getNumFincasNuevas() + " nuevas"}
+            img={plantation}
+          />
+          <Card
+            title={"Olivos"}
+            content={getNumOlivos()}
+            extra={getNumOlivos() / getNumFincas() + " olivos medios por finca"}
+            img={olive}
+          />
+          <Card
+            title={"Temperatura media"}
+            content={tempMedia + "ºC"}
+            img={weather}
+          />
+          <Card
+            title={"Producción prevista"}
+            content={getProduccionPrevista()}
+            img={production}
+          />
+        </>
       ) : (
-        <p>Cargando...</p>
+        <div>
+          <h1>Cargando datos</h1>
+        </div>
       )}
-      <Card
-        title={"Producción prevista"}
-        content={getProduccionPrevista()}
-        img={production}
-      />
     </>
   );
 }
@@ -148,13 +166,27 @@ function ForecastInformation({ locations, handleShowMoreForecast }) {
 const Dashboard = () => {
   const mapRef = useRef();
   const [mapReady, setMapReady] = useState(false);
-  const markerCoords = getCoordsForMarker();
   const [showAlerts, setShowAlerts] = useState(null);
   const alerts = getAlerts();
-  const locations = getLocations();
+  const [locations, setLocations] = useState([]);
+  const [markerCoords, setMarkerCoords] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setMapReady(true);
+    async function fetchFincas() {
+      try {
+        const data = await getLocations();
+        const markerData = await getCoordsForMarker();
+        setLocations(data);
+        setMarkerCoords(markerData);
+        setLoading(false);
+      } catch (error) {
+        console.error("Hubo un error al obtener las fincas:", error);
+      }
+    }
+
+    fetchFincas();
   }, []);
 
   const handleShowAlerts = () => {
@@ -167,55 +199,75 @@ const Dashboard = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.content}>
-        <div className={styles.estadisticas}>
-          <div className={styles.cardContent}>
-            <InformationCards />
-          </div>
-          <div className={styles.mapContent}>
-            <MapComp
-              ref={mapRef}
-              width="100%"
-              height="100%"
-              target={"map"}
-              zoom="17"
-              controls={true}
-              showFincas={true}
-            />
-          </div>
-        </div>
-        <div className={`${styles.estadisticas} ${styles.secundario}`}>
-          <div className={`${styles.contentDiv} ${styles.smallMap}`}>
-            <MapComp
-              target={"mapaLugares"}
-              ref={mapRef}
-              width="100%"
-              height="100%"
-              zoom="5"
-              markerCoords={markerCoords}
-            />
-          </div>
-          <div className={`${styles.contentDiv} ${styles.forecast}`}>
-            <ForecastInformation
-              locations={locations}
-              handleShowMoreForecast={handleShowMoreForecast}
-            />
+      {!loading && (
+        <>
+          <div className={styles.content}>
+            <div className={styles.estadisticas}>
+              <div className={styles.cardContent}>
+                {loading ? (
+                  <div>
+                    <h2>Cargando info</h2>
+                  </div>
+                ) : (
+                  <InformationCards />
+                )}
+              </div>
+              <div className={styles.mapContent}>
+                {mapReady ? (
+                  <MapComp
+                    ref={mapRef}
+                    width="100%"
+                    height="100%"
+                    target={"map"}
+                    zoom="17"
+                    controls={true}
+                    showFincas={true}
+                  />
+                ) : (
+                  <div>
+                    <h2>Cargando mapa</h2>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className={`${styles.estadisticas} ${styles.secundario}`}>
+              <div className={`${styles.contentDiv} ${styles.smallMap}`}>
+                {markerCoords && (
+                  <MapComp
+                    target={"mapaLugares"}
+                    ref={mapRef}
+                    width="100%"
+                    height="100%"
+                    zoom="5"
+                    markerCoords={markerCoords}
+                  />
+                )}
+              </div>
+              <div className={`${styles.contentDiv} ${styles.forecast}`}>
+                <ForecastInformation
+                  locations={locations}
+                  handleShowMoreForecast={handleShowMoreForecast}
+                />
+              </div>
+
+              <div
+                className={`${styles.contentDiv} ${styles.notificationsDiv}`}
+              >
+                <Carousel alerts={alerts} />
+              </div>
+            </div>
           </div>
 
-          <div className={`${styles.contentDiv} ${styles.notificationsDiv}`}>
-            <Carousel alerts={alerts} />
-          </div>
-        </div>
-      </div>
-
-      <Alertas
-        alerts={alerts}
-        showAlerts={showAlerts}
-        handleShowAlerts={handleShowAlerts}
-      />
-      {/* TOOLTIPS*/}
-      <Tooltip id="alertas" style={{ zIndex: "9999" }} />
-      <Tooltip id="verMas" style={{ zIndex: "9999" }} />
+          <Alertas
+            alerts={alerts}
+            showAlerts={showAlerts}
+            handleShowAlerts={handleShowAlerts}
+          />
+          {/* TOOLTIPS*/}
+          <Tooltip id="alertas" style={{ zIndex: "9999" }} />
+          <Tooltip id="verMas" style={{ zIndex: "9999" }} />
+        </>
+      )}
     </div>
   );
 };

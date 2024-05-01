@@ -1,95 +1,34 @@
 import axios from "axios";
 
-export const getFincas = () => {
-  const fincas = [
-    {
-      id: "14900A081000100000FZ",
-      localizacion: {
-        municipio: "LOS VILLARES",
-        provincia: "CÓRDOBA",
-        codigoPostal: "14029",
-        direccion: "DS SIERRA Polígono 81 Parcela 10",
-      },
-      clase: "Rústico",
-      usoPrincipal: "Agrario",
-      superficieConstruida: "2.886 m2",
-      anoConstruccion: 2013,
-      numOlivos: 50, // Número estático de olivos para esta finca
-    },
-    {
-      id: "24900A081000100000FZ",
-      localizacion: {
-        municipio: "VILLANUEVA DE CÓRDOBA",
-        provincia: "CÓRDOBA",
-        codigoPostal: "14100",
-        direccion: "Calle Mayor, 23",
-      },
-      clase: "Urbano",
-      usoPrincipal: "Residencial",
-      superficieConstruida: "1.200 m2",
-      anoConstruccion: 2005,
-      numOlivos: 30, // Número estático de olivos para esta finca
-    },
-    {
-      id: "34900A081000100000FZ",
-      localizacion: {
-        municipio: "LUCENA",
-        provincia: "CÓRDOBA",
-        codigoPostal: "14900",
-        direccion: "Calle Real, 10",
-      },
-      clase: "Urbano",
-      usoPrincipal: "Comercial",
-      superficieConstruida: "800 m2",
-      anoConstruccion: 1998,
-      numOlivos: 40, // Número estático de olivos para esta finca
-    },
-    {
-      id: "44900A081000100000FZ",
-      localizacion: {
-        municipio: "FUENTE PALMERA",
-        provincia: "CÓRDOBA",
-        codigoPostal: "14120",
-        direccion: "Avenida Andalucía, 5",
-      },
-      clase: "Urbano",
-      usoPrincipal: "Industrial",
-      superficieConstruida: "3.500 m2",
-      anoConstruccion: 2000,
-      numOlivos: 60, // Número estático de olivos para esta finca
-    },
-    {
-      id: "54900A081000100000FZ",
-      localizacion: {
-        municipio: "PUENTE GENIL",
-        provincia: "CÓRDOBA",
-        codigoPostal: "14500",
-        direccion: "Calle San Francisco, 12",
-      },
-      clase: "Urbano",
-      usoPrincipal: "Residencial",
-      superficieConstruida: "2.000 m2",
-      anoConstruccion: 2010,
-      numOlivos: 70, // Número estático de olivos para esta finca
-    },
-  ];
+export const getFincas = async () => {
+  try {
+    const response = await axios.get(
+      "http://localhost:5000/gestiondelolivar-48d30/us-central1/app/api/fincas"
+    );
+    return response;
+  } catch (error) {
+    console.error(error);
+  }
 
-  return fincas;
+  return [];
 };
 
-export const getNumFincas = () => {
-  return getFincas().length;
+export const getNumFincas = async () => {
+  try {
+    const fincas = await getFincas();
+    return fincas.data.length;
+  } catch (error) {
+    console.error("Error al contar las fincas:", error);
+    throw error;
+  }
 };
 
 export const getNumFincasNuevas = () => {
-  return Math.floor(getFincas().length / 2);
+  return Math.floor(0);
 };
 
 export const getNumOlivos = () => {
   let count = 0;
-  getFincas().forEach((finca) => {
-    count += finca.numOlivos;
-  });
   return count;
 };
 
@@ -98,30 +37,74 @@ export const getProduccionPrevista = () => {
 };
 
 export const getFincaById = (id) => {
-  const finca = getFincas().find((finca) => finca.id === id);
-  return finca;
+  const getFincaData = async (id) => {
+    try {
+      const fincas = await getFincas();
+      const finca = fincas.data.find((finca) => finca.id === id);
+      return finca.data;
+    } catch (error) {
+      console.error("Error al obtener la finca por ID:", error);
+      throw error;
+    }
+  };
+
+  return getFincaData(id);
+};
+export const getCoordsForMarker = async () => {
+  try {
+    const limit = 1; // Limitamos a 1 resultado por municipio
+    const municipios = await getLocations(false);
+    const countryCode = "ES";
+    const apiKey = "10febab50520dc67582eed976e016d80";
+
+    const coordenadasPromesas = municipios.map(async (municipio) => {
+      try {
+        const response = await axios.get(
+          `http://api.openweathermap.org/geo/1.0/direct?q=${municipio},${countryCode}&limit=${limit}&appid=${apiKey}`
+        );
+        const data = response.data;
+        if (data.length > 0) {
+          const coordenadas =
+            data[0].lat && data[0].lon ? [data[0].lat, data[0].lon] : null;
+          return { municipio, coordenadas };
+        } else {
+          throw new Error(
+            `No se encontraron coordenadas para el municipio ${municipio}`
+          );
+        }
+      } catch (error) {
+        console.error(
+          `Error al obtener las coordenadas para el municipio ${municipio}:`,
+          error
+        );
+        throw error;
+      }
+    });
+
+    const coordenadas = await Promise.all(coordenadasPromesas);
+    return coordenadas;
+  } catch (error) {
+    console.error("Error al obtener las coordenadas de los municipios:", error);
+    throw error;
+  }
 };
 
-export const getCoordsForMarker = () => {
-  const markerCoords = [
-    [-3.7038, 40.4168], // Madrid
-    [-4.4903, 36.7202], // Sevilla
-    [-0.9061, 41.6488], // Bilbao
-    [-0.8809, 41.9812], // San Sebastián
-    [-3.7492, 43.4623], // Santander
-    [-2.9337, 35.2873], // Málaga
-    [2.6502, 39.5696], // Tarragona
-    [-0.1276, 38.5411], // Valencia
-    [-6.2685, 36.5449], // Cádiz
-    [3.7038, 42.3601], // Barcelona
-  ];
-  return markerCoords;
-};
+export const getLocations = (cap = true) => {
+  const getData = async () => {
+    try {
+      const fincas = await getFincas();
+      const municipios = fincas.data.map(
+        (finca) => finca.data.localizacion.municipio
+      );
+      if (cap) return municipios.slice(0, 5);
+      return municipios;
+    } catch (error) {
+      console.error("Error al obtener la finca por ID:", error);
+      throw error;
+    }
+  };
 
-export const getLocations = () => {
-  const fincas = getFincas();
-  const locations = fincas.map((finca) => finca.localizacion.municipio);
-  return locations.slice(0, 5); // Si solo quieres los primeros 5 IDs
+  return getData();
 };
 
 export const fetchAllTemps = async (locations) => {
@@ -135,8 +118,17 @@ export const fetchAllTemps = async (locations) => {
 };
 
 export const getTemperaturaMedia = async () => {
-  const locations = getLocations();
-  return (await fetchAllTemps(locations)) / locations.length;
+  const getData = async () => {
+    try {
+      const locations = await getLocations();
+      return (await fetchAllTemps(locations)) / locations.length;
+    } catch (error) {
+      console.error("Error al obtener la finca por ID:", error);
+      throw error;
+    }
+  };
+
+  return getData();
 };
 
 export const getAlerts = () => {

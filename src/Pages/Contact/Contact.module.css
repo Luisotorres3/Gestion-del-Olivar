@@ -164,4 +164,8 @@
   .content h1 {
     font-size: 0.8em;
   }
+
+  .aboutMe img {
+    width: 100px;
+  }
 }

@@ -1,9 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./Gestion.module.css";
-import { getFincas } from "../../Utils/Firebase/databaseFunctions";
 import { Tooltip } from "react-tooltip";
-const Fincas = ({ mostrarInmuebleId }) => {
-  const fincas = getFincas();
+
+const Fincas = ({ fincas, mostrarInmuebleId }) => {
   return (
     <div className={styles.container}>
       <div className={styles.content}>
@@ -13,7 +12,6 @@ const Fincas = ({ mostrarInmuebleId }) => {
         <div className={styles.fincas}>
           <div className={styles.lista}>
             <div className={styles.buttons}>
-              {" "}
               <button
                 data-tooltip-id="add"
                 data-tooltip-content="Crear Finca"
@@ -22,7 +20,7 @@ const Fincas = ({ mostrarInmuebleId }) => {
                 <i className="fa fa-plus-square-o" aria-hidden="true"></i>
                 <Tooltip id="add" style={{ zIndex: "9999" }} />
               </button>
-            </div>{" "}
+            </div>
             <table>
               <thead>
                 <tr>
@@ -38,16 +36,13 @@ const Fincas = ({ mostrarInmuebleId }) => {
               <tbody>
                 {fincas.map((finca, index) => (
                   <tr key={index}>
-                    <td>{finca.id}</td>
-                    <td>
-                      {finca.localizacion.municipio},{" "}
-                      {finca.localizacion.provincia},{" "}
-                      {finca.localizacion.codigoPostal}
-                    </td>
-                    <td>{finca.clase}</td>
-                    <td>{finca.usoPrincipal}</td>
-                    <td>{finca.superficieConstruida}</td>
-                    <td>{finca.anoConstruccion}</td>
+                    <td>{finca.data.referenciaCatastral}</td>
+                    <td>{`${finca.data.localizacion.direccion}, ${finca.data.localizacion.municipio}, ${finca.data.localizacion.codigoPostal}, ${finca.data.localizacion.pais}`}</td>
+
+                    <td>{finca.data.clase}</td>
+                    <td>{finca.data.usoPrincipal}</td>
+                    <td>{finca.data.superficieConstruida}</td>
+                    <td>{finca.data.anoConstruccion}</td>
                     <td>
                       <div className={styles.acciones}>
                         <button

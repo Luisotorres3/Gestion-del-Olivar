@@ -85,9 +85,9 @@ function CardTechs() {
         "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Octicons-mark-github.svg/240px-Octicons-mark-github.svg.png",
     },
     {
-      nombre: "Django",
+      nombre: "Flask",
       imagen:
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Django_logo.svg/240px-Django_logo.svg.png",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Flask_logo.svg/460px-Flask_logo.svg.png",
     },
     {
       nombre: "Firebase",
