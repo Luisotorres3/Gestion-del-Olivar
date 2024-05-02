@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import styles from "./Forecast.module.css";
 import {
   fetchWeather,
+  fetchWeatherAEMET,
+  getCoordsForCity,
   getFincas,
 } from "../../Utils/Firebase/databaseFunctions";
 
@@ -39,9 +41,70 @@ function ForecastInfoGeneral({
   setSelectedFinca,
   weatherSelectedFinca,
 }) {
+  const [selectedDate, setSelectedDate] = useState("");
+
+  const fetchCurrentDate = async () => {
+    try {
+      const coords = await getCoordsForCity(selectedFinca);
+      const response = await fetch(
+        `http://api.geonames.org/timezoneJSON?formatted=true&lat=${coords[0]}&lng=${coords[1]}&username=luisotorres`
+      );
+      const data = await response.json();
+      setSelectedDate(data.time);
+    } catch (error) {
+      console.error("Error fetching current date:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedFinca) {
+      fetchCurrentDate();
+
+      // Establecer intervalo para actualizar la fecha y hora cada minuto
+      const intervalId = setInterval(fetchCurrentDate, 60000);
+
+      // Limpiar intervalo al desmontar el componente
+      return () => clearInterval(intervalId);
+    }
+  }, [selectedFinca]);
+
   // Función para manejar el cambio de selección
   const handleChange = (event) => {
     setSelectedFinca(event.target.value);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const daysOfWeek = [
+      "Domingo",
+      "Lunes",
+      "Martes",
+      "Miércoles",
+      "Jueves",
+      "Viernes",
+      "Sábado",
+    ];
+    const months = [
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre",
+    ];
+
+    const dayOfWeek = daysOfWeek[date.getDay()];
+    const dayOfMonth = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+
+    return `${dayOfWeek}, ${dayOfMonth} ${month}, ${year}`;
   };
   return (
     <>
@@ -54,23 +117,32 @@ function ForecastInfoGeneral({
           handleChange={handleChange}
         />
       </div>
-      <div>
-        <h1>11.40</h1>
-        <p>Fecha de hoy</p>
-      </div>
-      <div className="d-flex justify-content-between align-items-center">
-        <div>
-          <p>Weather Forecast</p>
-          <h3>Medio nublado</h3>
-          <p>Precipitacion: 30%</p>
-        </div>
-        <div>
-          <img
-            src={`${iconURL}${weatherSelectedFinca.weather[0].icon}@4x.png`}
-            style={{ width: "auto" }}
-          />
-        </div>
-      </div>
+      {weatherSelectedFinca && (
+        <>
+          <div>
+            <h1>{selectedDate.split(" ")[1]}</h1>
+            <p>{formatDate(selectedDate.split(" ")[0])}</p>
+          </div>
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <p>Weather Forecast</p>
+              <h3>{weatherSelectedFinca.weather[0].main}</h3>
+              <p>
+                {weatherSelectedFinca.weather[0].description}, precipitacion:{" "}
+                {weatherSelectedFinca.rain && weatherSelectedFinca.rain["1h"]
+                  ? `${weatherSelectedFinca.rain["1h"]} mm/h`
+                  : "0%"}
+              </p>
+            </div>
+            <div>
+              <img
+                src={`${iconURL}${weatherSelectedFinca.weather[0].icon}@4x.png`}
+                style={{ width: "auto" }}
+              />
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
@@ -107,13 +179,13 @@ function ForecastAnalysis() {
   );
 }
 
-function DayForecast({ day }) {
+function DayForecast({ dayWeather }) {
   return (
     <li className={styles.dayList}>
       <div className={styles.dayForecastIndividual}>
-        <div className="d-flex justify-content-center align-items-center">
+        <div className={styles.imgDayForecast}>
           <img
-            src={require("../../Images/UGR.png")}
+            src={`${iconURL}${dayWeather.weather[0].icon}@2x.png`}
             style={{ width: "35px" }}
           />
         </div>
@@ -122,7 +194,7 @@ function DayForecast({ day }) {
           <p>Lluvia</p>
         </div>
         <div className="d-flex justify-content-center align-items-center">
-          <p>18ºC</p>
+          <p>{dayWeather.main.temp} ºC</p>
         </div>
       </div>
     </li>
@@ -181,7 +253,7 @@ function SecondaryDiv({
             <div className={styles.divWeekForecast}>
               <ul className="list-group border-0">
                 {days.map((number) => (
-                  <DayForecast day={number} key={number} />
+                  <DayForecast dayWeather={weatherSelectedFinca} key={number} />
                 ))}
               </ul>
             </div>
@@ -226,11 +298,24 @@ const Forecast = () => {
     }
   }, [selectedFinca]);
 
+  const [datosAEMET, setDatosAEMET] = useState(null); // Estado para almacenar el texto de carga
+
+  useEffect(() => {
+    const solicitar = async () => {
+      try {
+        //const data = await fetchWeatherAEMET(selectedFinca);
+        //setDatosAEMET(data);
+      } catch (error) {}
+    };
+
+    solicitar();
+  }, []);
+
   return (
-    <div className={`container-fluid ${styles.container}`}>
+    <div className={styles.container}>
       {selectedFinca && (
         <div className={styles.content}>
-          <div className={`d-flex ${styles.insideContent}`}>
+          <div className={styles.insideContent}>
             <div className={`${styles.info} ${styles.main}`}>
               <div className={styles.divInterior}>
                 <div className={styles.interiorWithBackground}>
@@ -242,14 +327,20 @@ const Forecast = () => {
                 </div>
               </div>
               <div className={styles.divInterior}>
-                <ForecastStatus />
-              </div>
-              <div className="d-flex w-100">
-                <div className={`${styles.divInterior} w-100 h-100`}>
-                  <ForecastAnalysis />
+                <div className={styles.analysisInterior}>
+                  <ForecastStatus />
                 </div>
-                <div className={`${styles.divInterior} w-100 h-100`}>
-                  <ForecastAnalysis />
+              </div>
+              <div className={styles.divAnalysis}>
+                <div className={`${styles.divInterior}`}>
+                  <div className={styles.analysisInterior}>
+                    <ForecastAnalysis />
+                  </div>
+                </div>
+                <div className={`${styles.divInterior}`}>
+                  <div className={styles.analysisInterior}>
+                    <ForecastAnalysis />
+                  </div>
                 </div>
               </div>
             </div>

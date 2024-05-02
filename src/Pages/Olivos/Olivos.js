@@ -93,12 +93,43 @@ const Olivos = () => {
     });
     mapRef.current.renderSync();
   };
+  const [level, setLevel] = useState("Medio");
+
+  const handleSliderChange = (event) => {
+    const value = parseInt(event.target.value);
+    let newLevel = "Medio";
+    if (value === 1) {
+      newLevel = "Fácil";
+    } else if (value === 3) {
+      newLevel = "Pro";
+    }
+    setLevel(newLevel);
+  };
 
   return (
     <div className={styles.container}>
       <div className={styles.content}>
         <div className={styles.insideContent}>
-          <select></select>
+          <div className={`${styles.contentDiv} ${styles.options}`}>
+            <select>
+              <option value="Fácil">Fácil</option>
+              <option value="Medio">Medio</option>
+              <option value="Pro">Pro</option>
+            </select>
+            <div className={styles.sliderContainer}>
+              <label htmlFor="difficulty-slider">{level}</label>
+              <input
+                type="range"
+                min="1"
+                max="3"
+                defaultValue="2"
+                className={styles.slider}
+                id="difficulty-slider"
+                onChange={handleSliderChange}
+              />
+            </div>
+            <button onClick={exportMapImage}>Procesar Imagen</button>
+          </div>
           <div className={`${styles.contentDiv} ${styles.images}`}>
             <div className={styles.imagesDiv}>
               <h3>Imagen original</h3>
@@ -131,9 +162,6 @@ const Olivos = () => {
                 </div>
               )}
             </div>
-          </div>
-          <div className={`${styles.contentDiv} ${styles.actions}`}>
-            <button onClick={exportMapImage}>Procesar Imagen</button>
           </div>
         </div>
       </div>

@@ -71,6 +71,7 @@ function Alertas({ alerts, showAlerts, handleShowAlerts }) {
 function InformationCards() {
   const [tempMedia, setTempMedia] = useState(null);
   const [numFincas, setNumFincas] = useState(0);
+  const [numOlivos, setNumOlivos] = useState(0);
 
   useEffect(() => {
     const obtenerTemperaturaMedia = async () => {
@@ -85,7 +86,9 @@ function InformationCards() {
     async function fetchFincas() {
       try {
         const data = await getFincas();
+        const data2 = await getNumOlivos();
         setNumFincas(data.data.length);
+        setNumOlivos(data2);
       } catch (error) {
         console.error("Hubo un error al obtener las fincas:", error);
         // Manejar el error según sea necesario
@@ -109,8 +112,8 @@ function InformationCards() {
           />
           <Card
             title={"Olivos"}
-            content={getNumOlivos()}
-            extra={getNumOlivos() / getNumFincas() + " olivos medios por finca"}
+            content={numOlivos}
+            extra={numOlivos / numFincas + " olivos medios por finca"}
             img={olive}
           />
           <Card
@@ -199,7 +202,7 @@ const Dashboard = () => {
 
   return (
     <div className={styles.container}>
-      {!loading && (
+      {!loading ? (
         <>
           <div className={styles.content}>
             <div className={styles.estadisticas}>
@@ -267,6 +270,10 @@ const Dashboard = () => {
           <Tooltip id="alertas" style={{ zIndex: "9999" }} />
           <Tooltip id="verMas" style={{ zIndex: "9999" }} />
         </>
+      ) : (
+        <div>
+          <h2>Cargando datos</h2>
+        </div>
       )}
     </div>
   );

@@ -63,6 +63,20 @@
   margin-right: 8px;
 }
 
+.options {
+  height: 20%;
+}
+
+.sliderContainer {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+}
+
+.slider {
+  width: 200px;
+}
+
 /* RESPONSIVE */
 
 @media screen and (max-width: 768px) {
