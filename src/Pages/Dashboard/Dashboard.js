@@ -21,6 +21,7 @@ import {
   getProduccionPrevista,
   getTemperaturaMedia,
 } from "../../Utils/Firebase/databaseFunctions";
+import { Link } from "react-router-dom";
 
 function Alertas({ alerts, showAlerts, handleShowAlerts }) {
   if (alerts.length > 0) {
@@ -73,30 +74,29 @@ function InformationCards() {
   const [numFincas, setNumFincas] = useState(0);
   const [numOlivos, setNumOlivos] = useState(0);
 
-  useEffect(() => {
-    const obtenerTemperaturaMedia = async () => {
-      try {
-        const temperaturaMedia = await getTemperaturaMedia();
-        setTempMedia(temperaturaMedia);
-      } catch (error) {
-        console.error("Error al obtener la temperatura media:", error);
-      }
-    };
-
-    async function fetchFincas() {
-      try {
-        const data = await getFincas();
-        const data2 = await getNumOlivos();
-        setNumFincas(data.data.length);
-        setNumOlivos(data2);
-      } catch (error) {
-        console.error("Hubo un error al obtener las fincas:", error);
-        // Manejar el error según sea necesario
-      }
+  const fetchFincas = async () => {
+    try {
+      const data = await getFincas();
+      const data2 = await getNumOlivos();
+      setNumFincas(data.data.length);
+      setNumOlivos(data2);
+    } catch (error) {
+      console.error("Hubo un error al obtener las fincas:", error);
+      // Manejar el error según sea necesario
     }
+  };
 
+  const obtenerTemperaturaMedia = async () => {
+    try {
+      const temperaturaMedia = await getTemperaturaMedia();
+      setTempMedia(temperaturaMedia);
+    } catch (error) {
+      console.error("Error al obtener la temperatura media:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchFincas();
-
     obtenerTemperaturaMedia();
   }, []);
 
@@ -151,15 +151,16 @@ function ForecastInformation({ locations, handleShowMoreForecast }) {
           locations.length > 0 &&
           locations.map((item, i) => <Forecast key={i} location={item} />)}
         <div className={styles.buttonMasForecast}>
-          <i
-            className="fa fa-plus-circle"
-            aria-hidden="true"
-            data-tooltip-id="verMas"
-            data-tooltip-content="Ver más"
-            data-tooltip-place="right"
-            style={{ color: "white", cursor: "pointer" }}
-            onClick={handleShowMoreForecast}
-          ></i>
+          <Link to="/pronostico">
+            <i
+              className="fa fa-plus-circle"
+              aria-hidden="true"
+              data-tooltip-id="verMas"
+              data-tooltip-content="Ver más"
+              data-tooltip-place="right"
+              style={{ color: "white", cursor: "pointer" }}
+            ></i>
+          </Link>
         </div>
       </div>
     </>
@@ -174,13 +175,16 @@ const Dashboard = () => {
   const [locations, setLocations] = useState([]);
   const [markerCoords, setMarkerCoords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fincas, setFincas] = useState(null);
 
   useEffect(() => {
     setMapReady(true);
     async function fetchFincas() {
       try {
+        const dataFincas = await getFincas();
         const data = await getLocations();
         const markerData = await getCoordsForMarker();
+        setFincas(dataFincas.data);
         setLocations(data);
         setMarkerCoords(markerData);
         setLoading(false);
@@ -216,7 +220,7 @@ const Dashboard = () => {
                 )}
               </div>
               <div className={styles.mapContent}>
-                {mapReady ? (
+                {mapReady && fincas.length > 0 ? (
                   <MapComp
                     ref={mapRef}
                     width="100%"
@@ -225,6 +229,7 @@ const Dashboard = () => {
                     zoom="17"
                     controls={true}
                     showFincas={true}
+                    fincas={fincas}
                   />
                 ) : (
                   <div>

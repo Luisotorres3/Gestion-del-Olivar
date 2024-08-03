@@ -15,7 +15,6 @@ const Fincas = () => {
     try {
       const data = await getFincas();
       setFincas(data.data);
-      console.log(fincas);
     } catch (error) {
       console.error("Hubo un error al obtener las fincas:", error);
       // Manejar el error según sea necesario
@@ -59,6 +58,7 @@ const Fincas = () => {
             fincas={fincas}
             mostrarInmuebleId={mostrarInmuebleId}
             handleDelete={handleDelete}
+            fetchFincas={fetchFincas}
           />
         )}
       </div>

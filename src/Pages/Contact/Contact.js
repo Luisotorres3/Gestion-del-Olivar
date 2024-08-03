@@ -104,6 +104,11 @@ function CardTechs() {
       imagen:
         "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Bootstrap_logo.svg/240px-Bootstrap_logo.svg.png",
     },
+    {
+      nombre: "Python",
+      imagen:
+        "https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg",
+    },
   ];
   return (
     <>
@@ -212,7 +217,6 @@ const Contact = () => {
       <section className={styles.section}>
         <div className={styles.content}>
           <div className={styles.contentTarjetas}>
-            <h1>A{titt ? titt : " b"}</h1>
             <div className={styles.tecnologias}>
               <TechUsed />
             </div>

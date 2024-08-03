@@ -65,6 +65,10 @@
 
 .options {
   height: 20%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .sliderContainer {
@@ -75,6 +79,10 @@
 
 .slider {
   width: 200px;
+}
+
+.flexColumna {
+  display: flex;
 }
 
 /* RESPONSIVE */

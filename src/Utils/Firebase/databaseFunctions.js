@@ -1,4 +1,26 @@
 import axios from "axios";
+import { fetchWeatherApi } from "openmeteo";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const baseURLDatabase =
   "http://localhost:5000/gestiondelolivar-48d30/us-central1/app";
@@ -56,6 +78,21 @@ export const deleteFincaById = async (id) => {
 
     if (response.status != 200) {
       throw new Error("Failed to delete finca");
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// ----------------------------------------------
+
+//CREATE FINCA
+export const createFinca = async (finca) => {
+  try {
+    const response = await axios.post(`${baseURLDatabase}/api/fincas/`, finca);
+
+    if (response.status != 204) {
+      throw new Error("Failed to create finca");
     }
   } catch (error) {
     console.log(error);
@@ -162,7 +199,6 @@ export const getNumOlivos = async () => {
     const fincas = await getFincas();
 
     fincas.data.forEach((item) => {
-      console.log(item);
       count += item.data.numOlivos;
     });
     return count;
@@ -214,6 +250,26 @@ export const getTemperaturaMedia = async () => {
 };
 
 //FETCH WEATHER AEMET
+export const fetchAEMET = async () => {
+  try {
+    const apiKey =
+      "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJsdWlzLnMudG9ycmVzM0BnbWFpbC5jb20iLCJqdGkiOiJlMWZhOWE3Ni1jYWNjLTRkNjMtOGUwYy0yM2U5NjRiNDhmODQiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTcxNDU5MzU4MywidXNlcklkIjoiZTFmYTlhNzYtY2FjYy00ZDYzLThlMGMtMjNlOTY0YjQ4Zjg0Iiwicm9sZSI6IiJ9.kmPsx02v15MOS_usg3oBS-nXXO_PnY3e3_EIdHLktmw";
+
+    const apiUrl =
+      "https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio/diaria/28079";
+    const response = await axios.get(`${apiUrl}/?api_key=${apiKey}`);
+    const url = response.data.datos;
+    console.log(response);
+    if (response.data.estado == 200) {
+      const weatherResponse = await axios.get(url);
+      return weatherResponse;
+    }
+    return [];
+  } catch (error) {
+    console.error("Error retrieving weather data: ", error);
+    throw error;
+  }
+};
 export const fetchWeatherAEMET = async (finca) => {
   try {
     // Definir la API Key
@@ -224,39 +280,57 @@ export const fetchWeatherAEMET = async (finca) => {
     const URL1 =
       "https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio/diaria/28079";
     let URL2 = "";
+    // Make the first request
+    const response1 = await fetch(`${URL1}/?api_key=${AK}`, {
+      headers: {
+        accept: "application/json",
+      },
+    });
 
-    // Hacer la primera solicitud
-    const response1 = await fetch(`${URL1}?api_key=${AK}`);
+    const response = await axios.get(`${URL1}/?api_key=${AK}`, {
+      "Access-Control-Allow-Origin": "*",
+    });
     const data1 = await response1.json();
 
-    // Obtener el campo "datos"
-    URL2 = data1.datos;
+    if (data1.estado == 200) {
+      // Get the "datos" field from the first response
+      URL2 = data1.datos;
+      console.log("U2");
+      console.log(URL2);
+      // Make the second request
+      const response2 = await fetch(URL2, {
+        headers: {
+          accept: "application/json",
+        },
+      });
+      console.log("R2");
+      console.log(response2);
+      const data2 = await response2.json();
 
-    // Hacer la segunda solicitud
-    const response2 = await fetch(URL2);
-    const data2 = await response2.json();
-
-    // Obtener la longitud del objeto JSON
-    const registros = data2.length;
-
-    // Obtener la fecha del primer registro
-    let fechaini = new Date(data2[0].fint);
-    fechaini =
-      fechaini.toLocaleDateString() + " " + fechaini.toLocaleTimeString();
-
-    // Obtener la fecha del último registro
-    let fechafin = new Date(data2[data2.length - 1].fint);
-    fechafin =
-      fechafin.toLocaleDateString() + " " + fechafin.toLocaleTimeString();
-
-    // Construir el texto a mostrar
-    const newTexto = `Se han descargado ${registros} registros desde el ${fechaini} hasta el ${fechafin}. `;
+      if (data2.estado == 200) return data2;
+      return [];
+    }
+    return [];
   } catch (error) {
     console.error("Error al obtener datos:", error);
   }
 };
 
 // ----------------------------------------------
+//FETCH WEATHER FORECAST
+export const fetchDatosForecast = async (params) => {
+  try {
+    const url = "https://api.open-meteo.com/v1/forecast";
+    const response = await axios.get(url, { params });
+
+    const data = response.data;
+
+    return data;
+  } catch (error) {
+    console.error("Error retrieving weather data: ", error);
+    throw error;
+  }
+};
 
 //GET ALERTAS
 export const getAlerts = () => {
