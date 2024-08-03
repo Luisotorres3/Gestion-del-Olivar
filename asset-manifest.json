@@ -1,8 +1,8 @@
 {
   "files": {
-    "main.css": "/Gestion-del-Olivar/static/css/main.0683ff36.css",
-    "main.js": "/Gestion-del-Olivar/static/js/main.cd12ace8.js",
-    "static/js/453.90a579e5.chunk.js": "/Gestion-del-Olivar/static/js/453.90a579e5.chunk.js",
+    "main.css": "/Gestion-del-Olivar/static/css/main.38244eef.css",
+    "main.js": "/Gestion-del-Olivar/static/js/main.833a7e78.js",
+    "static/js/453.72a72056.chunk.js": "/Gestion-del-Olivar/static/js/453.72a72056.chunk.js",
     "static/media/weatherVideo.mp4": "/Gestion-del-Olivar/static/media/weatherVideo.e0431c3371a4bfd44daa.mp4",
     "static/media/fontawesome-webfont.svg?v=4.7.0": "/Gestion-del-Olivar/static/media/fontawesome-webfont.c1e38fd9e0e74ba58f7a.svg",
     "static/media/Rain.jpg": "/Gestion-del-Olivar/static/media/Rain.e247061d0c83d389f0d7.jpg",
@@ -12,12 +12,12 @@
     "static/media/fontawesome-webfont.woff2?v=4.7.0": "/Gestion-del-Olivar/static/media/fontawesome-webfont.20fd1704ea223900efa9.woff2",
     "static/media/favicon.ico": "/Gestion-del-Olivar/static/media/favicon.f05a00794b7aae9c6b3b.ico",
     "index.html": "/Gestion-del-Olivar/index.html",
-    "main.0683ff36.css.map": "/Gestion-del-Olivar/static/css/main.0683ff36.css.map",
-    "main.cd12ace8.js.map": "/Gestion-del-Olivar/static/js/main.cd12ace8.js.map",
-    "453.90a579e5.chunk.js.map": "/Gestion-del-Olivar/static/js/453.90a579e5.chunk.js.map"
+    "main.38244eef.css.map": "/Gestion-del-Olivar/static/css/main.38244eef.css.map",
+    "main.833a7e78.js.map": "/Gestion-del-Olivar/static/js/main.833a7e78.js.map",
+    "453.72a72056.chunk.js.map": "/Gestion-del-Olivar/static/js/453.72a72056.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.0683ff36.css",
-    "static/js/main.cd12ace8.js"
+    "static/css/main.38244eef.css",
+    "static/js/main.833a7e78.js"
   ]
 }
