@@ -128,7 +128,7 @@ export const getCoordsForCity = async (cityName) => {
     const apiKey = "10febab50520dc67582eed976e016d80"; // Tu clave de API de OpenWeatherMap
 
     const response = await axios.get(
-      `http://api.openweathermap.org/geo/1.0/direct?q=${cityName},${countryCode}&limit=${limit}&appid=${apiKey}`
+      `https://api.openweathermap.org/geo/1.0/direct?q=${cityName},${countryCode}&limit=${limit}&appid=${apiKey}`
     );
 
     const data = response.data;
@@ -161,7 +161,7 @@ export const getCoordsForMarker = async () => {
     const coordenadasPromesas = municipios.map(async (municipio) => {
       try {
         const response = await axios.get(
-          `http://api.openweathermap.org/geo/1.0/direct?q=${municipio},${countryCode}&limit=${limit}&appid=${apiKey}`
+          `https://api.openweathermap.org/geo/1.0/direct?q=${municipio},${countryCode}&limit=${limit}&appid=${apiKey}`
         );
         const data = response.data;
         if (data.length > 0) {
