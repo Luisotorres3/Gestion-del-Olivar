@@ -149,6 +149,20 @@ function NavbarLogo({ isCollapsed, showNavbar }) {
 const Navbar = ({ links, user, handleSignOut }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selectedLink, setSelectedLink] = useState(null);
+  const anchoCollapsed = 60;
+  const anchoNotCollapsed = 260;
+  useEffect(() => {
+    const navbar = document.querySelector(`.${styles.navbar}`);
+    isCollapsed
+      ? document.documentElement.style.setProperty(
+          "--navbar-width",
+          `${anchoCollapsed}px`
+        )
+      : document.documentElement.style.setProperty(
+          "--navbar-width",
+          `${anchoNotCollapsed}px`
+        );
+  }, [isCollapsed]);
 
   function addToolTips() {
     return (
@@ -164,7 +178,7 @@ const Navbar = ({ links, user, handleSignOut }) => {
     <nav
       className={`${styles.navbar} ${isCollapsed ? styles.collapsed : ""}`}
       style={{
-        width: isCollapsed === false ? 260 : 60,
+        width: isCollapsed === false ? anchoNotCollapsed : anchoCollapsed,
       }}
       id="navbarId"
     >

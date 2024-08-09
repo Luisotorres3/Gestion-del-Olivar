@@ -127,6 +127,7 @@
   position: relative;
   /* Asegúrate de que el contenido esté encima del video */
   background-color: rgba(0, 0, 0, 0.5);
+  overflow: auto;
 }
 
 .background {

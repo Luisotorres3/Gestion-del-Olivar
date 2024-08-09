@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import styles from "./Gestion.module.css";
 import { Tooltip } from "react-tooltip";
 import { getFincaById } from "../../Utils/Firebase/databaseFunctions";
+
 const Inmueble = ({ idInmueble, mostrarInmuebleId }) => {
   const [finca, setFinca] = useState(null);
 
@@ -65,34 +66,19 @@ const Inmueble = ({ idInmueble, mostrarInmuebleId }) => {
                 <p>{finca.anoConstruccion}</p>
               </div>
               <div className={styles.infoDiv}>
-                <h3>Número de Olivos</h3>
+                <h3>Número de Olivos:</h3>
                 <p>{finca.numOlivos}</p>
               </div>
             </div>
             <div className={styles.infoFinca}>
               <h2>Información Parcela</h2>
               <div className={styles.infoDiv}>
-                <h3>Localización:</h3>
-                <p></p>
+                <h3>Latitud:</h3>
+                <p>{finca.localizacion.latitud}</p>
               </div>
               <div className={styles.infoDiv}>
-                <h3>Superficie Gráfica:</h3>
-                <p>{finca.superficieConstruida}</p>
-              </div>
-            </div>
-            <div className={styles.infoFinca}>
-              <h2>Información Cultivo</h2>
-              <div className={styles.infoDiv}>
-                <h3>Tipo de Cultivo:</h3>
-                <p></p>
-              </div>
-              <div className={styles.infoDiv}>
-                <h3>Número de árboles:</h3>
-                <p>{finca.superficieConstruida}</p>
-              </div>
-              <div className={styles.infoDiv}>
-                <h3>Histórico de producción:</h3>
-                <p>{finca.superficieConstruida}</p>
+                <h3>Longitud:</h3>
+                <p>{finca.localizacion.longitud}</p>
               </div>
             </div>
           </div>

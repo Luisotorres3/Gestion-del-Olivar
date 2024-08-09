@@ -1,0 +1,131 @@
+.landingPage {
+  font-family: "Roboto", sans-serif;
+  color: #333;
+  text-align: center;
+}
+
+.heroSection {
+  position: relative;
+  height: 60vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.videoBackground {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  height: 100%;
+  width: auto;
+  min-width: 100%;
+  min-height: 100%;
+  transform: translate(-50%, -50%);
+  object-fit: cover; /* Asegura que el video cubra todo el contenedor */
+}
+
+.heroOverlay {
+  background-color: rgba(
+    0,
+    0,
+    0,
+    0.6
+  ); /* Oscurece el fondo para mejor contraste */
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.landingHeader h1 {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  color: #f1c40f;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.landingHeader p {
+  font-size: 1.5rem;
+}
+
+.landingContent {
+  padding: 40px 20px;
+  background-color: #f7f7f7;
+}
+
+.feature {
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.feature h2 {
+  font-size: 2rem;
+  color: #27ae60;
+  margin-top: 10px;
+}
+
+.feature p {
+  font-size: 1.1rem;
+  color: #555;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.icon {
+  font-size: 3rem;
+  color: #27ae60;
+  margin-bottom: 15px;
+}
+
+.landingFooter {
+  margin-top: 40px;
+  padding: 20px;
+  background-color: #2c3e50;
+  color: white;
+}
+
+.loginButton {
+  background-color: #27ae60;
+  color: white;
+  padding: 15px 30px;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.loginButton:hover {
+  background-color: #219150;
+}
+
+.landingFooter p {
+  margin-top: 20px;
+  font-size: 1rem;
+  color: #ccc;
+}
+
+.signupText {
+  color: #f1c40f;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.signupText:hover {
+  text-decoration: underline;
+}

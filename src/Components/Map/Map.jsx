@@ -177,7 +177,6 @@ const MapComp = forwardRef((props, ref) => {
             selectedFinca.localizacion.longitud,
             selectedFinca.localizacion.latitud,
           ]);
-          console.log(coordinates);
           // Animar la vista del mapa hacia las coordenadas
           if (coordinates) {
             flyTo(coordinates, function () {}, mapRef.current.getView());

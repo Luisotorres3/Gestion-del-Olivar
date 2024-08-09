@@ -31,7 +31,6 @@ ChartJS.register(
 
 function ForecastStatus({ selectedFinca }) {
   const [datosForecast, setDatosForecast] = useState(null);
-
   const [opcionChart, setOpcionChart] = useState("temperatura");
 
   useEffect(() => {
@@ -41,32 +40,50 @@ function ForecastStatus({ selectedFinca }) {
       const coords = await getCoordsForCity(selectedFinca);
       let params;
 
-      if (opcionChart === "precipitacion") {
-        params = {
-          latitude: coords[0],
-          longitude: coords[1],
-          daily: ["precipitation_sum"],
-          timezone: "auto",
-        };
-      } else {
-        params = {
-          latitude: coords[0],
-          longitude: coords[1],
-          daily: ["temperature_2m_max", "temperature_2m_min"],
-          timezone: "auto",
-        };
+      switch (opcionChart) {
+        case "precipitacion":
+          params = {
+            latitude: coords[0],
+            longitude: coords[1],
+            daily: ["precipitation_sum"],
+            timezone: "auto",
+          };
+          break;
+        case "opcion3":
+          params = {
+            latitude: coords[0],
+            longitude: coords[1],
+            hourly: ["relative_humidity_2m", "wind_speed_10m"],
+            timezone: "auto",
+          };
+          break;
+        default:
+          params = {
+            latitude: coords[0],
+            longitude: coords[1],
+            daily: ["temperature_2m_max", "temperature_2m_min"],
+            timezone: "auto",
+          };
       }
 
       try {
         const data = await fetchDatosForecast(params);
         const weatherData = {
-          labels: data.daily.time.map((t) =>
-            new Date(t).toLocaleDateString("es-ES", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            })
-          ),
+          labels:
+            data.daily?.time?.map((t) =>
+              new Date(t).toLocaleDateString("es-ES", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })
+            ) ||
+            data.hourly?.time?.map((t) =>
+              new Date(t).toLocaleDateString("es-ES", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })
+            ),
           datasets:
             opcionChart === "precipitacion"
               ? [
@@ -75,6 +92,23 @@ function ForecastStatus({ selectedFinca }) {
                     data: data.daily.precipitation_sum,
                     borderColor: "rgba(75, 192, 192, 1)",
                     backgroundColor: "rgba(75, 192, 192, 0.2)",
+                    fill: true,
+                  },
+                ]
+              : opcionChart === "opcion3"
+              ? [
+                  {
+                    label: "Humedad Relativa (%)",
+                    data: data.hourly.relative_humidity_2m,
+                    borderColor: "rgba(153, 102, 255, 1)",
+                    backgroundColor: "rgba(153, 102, 255, 0.2)",
+                    fill: true,
+                  },
+                  {
+                    label: "Velocidad del Viento (km/h)",
+                    data: data.hourly.wind_speed_10m,
+                    borderColor: "rgba(255, 159, 64, 1)",
+                    backgroundColor: "rgba(255, 159, 64, 0.2)",
                     fill: true,
                   },
                 ]
@@ -149,7 +183,7 @@ function ForecastStatus({ selectedFinca }) {
         <select value={opcionChart} onChange={handleChange}>
           <option value="temperatura">Máximas y Mínimas</option>
           <option value="precipitacion">Precipitaciones</option>
-          <option value="opcion3">Opción 3</option>
+          <option value="opcion3">Humedad y Viento</option>
         </select>
       </div>
       {datosForecast && (

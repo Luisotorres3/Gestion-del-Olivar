@@ -13,6 +13,7 @@ const Olivos = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState("easy");
+  const [downloadUrl, setDownloadUrl] = useState(null);
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -33,14 +34,19 @@ const Olivos = () => {
       formData.append("image", imageBlob, "filename.png");
 
       try {
-        const response = await axios.post(
-          `http://localhost:5000/process_image${
-            method === "easy" ? "" : method
-          }`,
-          formData
-        );
+        const endpoint = `http://localhost:5000/process_image${
+          method === "easy" ? "" : method
+        }`;
+        const response = await axios.post(endpoint, formData);
         setProcessedImage(response.data);
         setLoading(false);
+
+        // Crear URL de descarga
+        const blob = new Blob(
+          [Uint8Array.from(atob(response.data), (c) => c.charCodeAt(0))],
+          { type: "image/png" }
+        );
+        setDownloadUrl(URL.createObjectURL(blob));
       } catch (error) {
         setErrorMessage("Error procesando imagen");
         setProcessedImage(null);
@@ -51,8 +57,7 @@ const Olivos = () => {
 
     if (showPhoto && uploadedImage) {
       // Procesar imagen cargada
-      const imageBlob = new Blob([uploadedImage], { type: uploadedImage.type });
-      await processImage(imageBlob);
+      await processImage(uploadedImage);
     } else {
       // Procesar imagen del mapa
       mapRef.current.once("rendercomplete", async function () {
@@ -61,6 +66,7 @@ const Olivos = () => {
         mapCanvas.width = size[0];
         mapCanvas.height = size[1];
         const mapContext = mapCanvas.getContext("2d");
+
         Array.prototype.forEach.call(
           mapRef.current
             .getViewport()
@@ -70,6 +76,7 @@ const Olivos = () => {
               const opacity =
                 canvas.parentNode.style.opacity || canvas.style.opacity;
               mapContext.globalAlpha = opacity === "" ? 1 : Number(opacity);
+
               let matrix;
               const transform = canvas.style.transform;
               if (transform) {
@@ -87,27 +94,36 @@ const Olivos = () => {
                   0,
                 ];
               }
+
               CanvasRenderingContext2D.prototype.setTransform.apply(
                 mapContext,
                 matrix
               );
+
               const backgroundColor = canvas.parentNode.style.backgroundColor;
               if (backgroundColor) {
                 mapContext.fillStyle = backgroundColor;
                 mapContext.fillRect(0, 0, canvas.width, canvas.height);
               }
+
               mapContext.drawImage(canvas, 0, 0);
             }
           }
         );
+
         mapContext.globalAlpha = 1;
         mapContext.setTransform(1, 0, 0, 1, 0, 0);
-        setSelectedImage(mapCanvas.toDataURL());
 
+        // Convertir el canvas a data URL y establecerlo como imagen seleccionada
+        const dataURL = mapCanvas.toDataURL();
+        setSelectedImage(dataURL);
+
+        // Convertir el canvas a Blob y procesar la imagen
         mapCanvas.toBlob(async function (blob) {
           await processImage(blob);
         });
       });
+
       mapRef.current.renderSync();
     }
   };
@@ -197,11 +213,23 @@ const Olivos = () => {
                   <h1>{"Cargando"}</h1>
                 </div>
               ) : processedImage ? (
-                <img
-                  className="h-100 w-100"
-                  src={`data:image/png;base64,${processedImage}`}
-                  alt="Processed"
-                />
+                <>
+                  <img
+                    className="h-100 w-100"
+                    src={`data:image/png;base64,${processedImage}`}
+                    alt="Processed"
+                  />
+                  {selectedMethod === "3" && downloadUrl && (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => window.open(downloadUrl, "_blank")}
+                      download="processed_image.png"
+                    >
+                      Descargar Imagen Procesada
+                    </Button>
+                  )}
+                </>
               ) : (
                 <div className="d-flex justify-content-center align-items-center h-100 w-100 border">
                   <h1>{errorMessage}</h1>

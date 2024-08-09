@@ -2,6 +2,7 @@ import { React, useState } from "react";
 import FloatingLabel from "react-bootstrap/FloatingLabel";
 import Form from "react-bootstrap/Form";
 import styles from "./Login.module.css";
+import { useNavigate } from "react-router-dom";
 import {
   doSendEmailVerification,
   doSignInWithEmailAndPassword,
@@ -13,6 +14,7 @@ const Login = () => {
   const [email, setEmail] = useState(""); // Estado para el correo electrónico
   const [password, setPassword] = useState(""); // Estado para la contraseña
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   //Método para iniciar sesión con email y contraseña
   const handleSignIn = (e) => {
@@ -21,6 +23,7 @@ const Login = () => {
     doSignInWithEmailAndPassword(email, password)
       .then((userCredential) => {
         //doSendEmailVerification();
+        navigate("/");
         console.log(userCredential);
       })
       .catch((e) => {
@@ -33,6 +36,7 @@ const Login = () => {
     e.preventDefault();
     doSignInWithGoogle()
       .then((userCredential) => {
+        navigate("/");
         console.log(userCredential);
       })
       .catch((e) => {

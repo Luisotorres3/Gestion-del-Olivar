@@ -4,9 +4,7 @@ import Register from "./Register";
 import Login from "./Login";
 
 const Account = () => {
-  //Variables
   const [error, setError] = useState(null);
-
   const [loginMode, setLoginMode] = useState(true);
 
   const handleClick = (event) => {
@@ -15,36 +13,44 @@ const Account = () => {
   };
 
   return (
-    <div className={styles.loginForm}>
-      <div className={styles.loginFormRectangle}>
-        <div className={styles.loginLogo}>
-          <h2>{loginMode == true ? "Iniciar Sesión" : "Crear cuenta"}</h2>
-          <img src={require("../../../Images/UGR.png")}></img>
+    <div className={styles.accountContainer}>
+      <div className={styles.formWrapper}>
+        <div className={styles.logoColumn}>
+          <img
+            src={require("../../../Images/UGR.png")}
+            alt="Logo"
+            className={styles.logo}
+          />
         </div>
-        <div className={styles.floatingForm}>
-          <div style={{ display: "flex", flexDirection: "column" }}>
+        <div className={styles.formColumn}>
+          <h2 className={styles.header}>
+            {loginMode ? "Iniciar Sesión" : "Crear cuenta"}
+          </h2>
+          <div className={styles.floatingForm}>
             {loginMode ? <Login /> : <Register />}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                padding: "0 10px",
-              }}
-            >
+            <div className={styles.formFooter}>
               {loginMode ? (
                 <>
-                  <a href="" target="_blank" rel="noreferrer">
+                  <a href="" className={styles.forgotPassword}>
                     ¿Has olvidado tu contraseña?
                   </a>
                   <p>
                     ¿No tienes cuenta?
-                    <a href="" onClick={handleClick}>
+                    <a
+                      href=""
+                      className={styles.switchModeLink}
+                      onClick={handleClick}
+                    >
                       Regístrate
                     </a>
                   </p>
                 </>
               ) : (
-                <a href="" onClick={handleClick}>
+                <a
+                  href=""
+                  className={styles.switchModeLink}
+                  onClick={handleClick}
+                >
                   ¿Ya tienes cuenta?
                 </a>
               )}

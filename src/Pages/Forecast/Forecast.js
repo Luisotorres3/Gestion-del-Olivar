@@ -1,19 +1,15 @@
 import React, { useEffect, useState } from "react";
 import styles from "./Forecast.module.css";
-import {
-  fetchDatosForecast,
-  getCoordsForCity,
-} from "../../Utils/Firebase/databaseFunctions";
 import ForecastInfoGeneral from "../../Components/ForecastPageComponents/ForecastInfoGeneral";
 import ForecastStatus from "../../Components/ForecastPageComponents/ForecastStatus";
 import SecondaryDiv from "../../Components/ForecastPageComponents/SecondaryDiv";
 import useFincas from "../../Hooks/useFincas";
+import ForecastExtra from "../../Components/ForecastPageComponents/ForecastExtra";
 
 const Forecast = () => {
   const [selectedFinca, setSelectedFinca] = useState(null);
   const { fincas, error } = useFincas();
   const [weatherSelectedFinca, setWeatherSelectedFinca] = useState(null);
-  const [datosForecast, setDatosForecast] = useState(null);
 
   useEffect(() => {
     if (fincas && fincas.length > 0) {
@@ -43,16 +39,7 @@ const Forecast = () => {
                 </div>
               </div>
               <div className={styles.divAnalysis}>
-                <div className={`${styles.divInterior}`}>
-                  <div className={styles.analysisInterior}>
-                    {/* Placeholder for future analysis */}
-                  </div>
-                </div>
-                <div className={`${styles.divInterior}`}>
-                  <div className={styles.analysisInterior}>
-                    {/* Placeholder for future analysis */}
-                  </div>
-                </div>
+                <ForecastExtra selectedFinca={selectedFinca} />
               </div>
             </div>
             <div className={`${styles.info} ${styles.secondary}`}>

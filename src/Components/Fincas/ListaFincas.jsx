@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import styles from "./Gestion.module.css";
 import { Tooltip } from "react-tooltip";
 import { Modal, Button, Form, FloatingLabel } from "react-bootstrap";
-import { createFinca } from "../../Utils/Firebase/databaseFunctions";
+import {
+  createFinca,
+  getCoordsForCity,
+} from "../../Utils/Firebase/databaseFunctions";
 
 function PopupForm({ isOpen, onClose, fetchFincas }) {
   const [formData, setFormData] = useState({
@@ -12,6 +15,8 @@ function PopupForm({ isOpen, onClose, fetchFincas }) {
       municipio: "",
       codigoPostal: "",
       pais: "",
+      latitud: "",
+      longitud: "",
     },
     clase: "",
     usoPrincipal: "",
@@ -41,6 +46,7 @@ function PopupForm({ isOpen, onClose, fetchFincas }) {
       });
     }
   };
+
   const handleLocationChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -51,13 +57,33 @@ function PopupForm({ isOpen, onClose, fetchFincas }) {
       },
     }));
   };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     // Aquí puedes enviar los datos a la API o hacer lo que necesites con ellos
     const create = async () => {
       try {
+        const coords = await getCoordsForCity(formData.localizacion.municipio);
+        formData.localizacion.latitud = coords[0];
+        formData.localizacion.longitud = coords[1];
         await createFinca(formData);
         fetchFincas();
+        setFormData({
+          referenciaCatastral: "",
+          localizacion: {
+            direccion: "",
+            municipio: "",
+            codigoPostal: "",
+            pais: "",
+            latitud: "",
+            longitud: "",
+          },
+          clase: "",
+          usoPrincipal: "",
+          superficieConstruida: "",
+          anoConstruccion: "",
+          numOlivos: "",
+        });
       } catch (error) {
         console.log(error);
       }
@@ -144,7 +170,6 @@ function PopupForm({ isOpen, onClose, fetchFincas }) {
           </FloatingLabel>
 
           <FloatingLabel controlId="claseInput" label="Clase" className="mb-3">
-            {" "}
             <Form.Control
               as="select"
               name="clase"
@@ -152,6 +177,7 @@ function PopupForm({ isOpen, onClose, fetchFincas }) {
               onChange={handleChange}
             >
               <option value="">Seleccionar Clase</option>
+              <option value="Rústico">Rústico</option>
               <option value="Residencial">Residencial</option>
               <option value="Comercial">Comercial</option>
               <option value="Industrial">Industrial</option>
@@ -171,6 +197,7 @@ function PopupForm({ isOpen, onClose, fetchFincas }) {
               onChange={handleChange}
             >
               <option value="">Seleccionar Uso Principal</option>
+              <option value="Agrario">Agrario</option>
               <option value="Vivienda">Vivienda</option>
               <option value="Oficina">Oficina</option>
               <option value="Almacén">Almacén</option>
@@ -206,7 +233,7 @@ function PopupForm({ isOpen, onClose, fetchFincas }) {
             >
               <option value="">Seleccionar Año</option>
               {Array.from(
-                { length: new Date().getFullYear() - 1900 },
+                { length: new Date().getFullYear() - 1900 + 1 },
                 (_, index) => (
                   <option key={index} value={1900 + index}>
                     {1900 + index}
@@ -254,6 +281,7 @@ const Fincas = ({ fincas, mostrarInmuebleId, handleDelete, fetchFincas }) => {
   const closePopup = () => {
     setIsPopupOpen(false);
   };
+
   return (
     <div className={styles.container}>
       <div className={styles.content}>

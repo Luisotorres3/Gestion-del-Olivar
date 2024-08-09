@@ -259,7 +259,6 @@ export const fetchAEMET = async () => {
       "https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio/diaria/28079";
     const response = await axios.get(`${apiUrl}/?api_key=${apiKey}`);
     const url = response.data.datos;
-    console.log(response);
     if (response.data.estado == 200) {
       const weatherResponse = await axios.get(url);
       return weatherResponse;

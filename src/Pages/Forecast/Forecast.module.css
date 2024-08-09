@@ -1,10 +1,11 @@
-/* FORECAST CSS*/
+/* FORECAST CSS */
 
-/* Forecast - Contenedor general*/
+/* Forecast - Contenedor general */
 p {
   margin: 0;
   padding: 0;
 }
+
 .container {
   height: 100%;
   width: 100%;
@@ -31,6 +32,7 @@ p {
   height: 100%;
 }
 
+/* Divs con fondo */
 .divInterior {
   border: 1px solid;
   border-radius: 8px;
@@ -43,6 +45,29 @@ p {
   height: 100%;
 }
 
+.divInteriorExtra {
+  padding: 20px;
+  border: 1px solid;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background-image: url("../../Images/Rain.jpg");
+  background-size: cover;
+  color: white;
+  background-position: center; /* Centra la imagen en el contenedor */
+  width: 100%; /* Ajusta el ancho al 100% del contenedor */
+  height: 100%;
+}
+
+/* Icono de información */
+.infoIcon {
+  color: #007bff;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 5px;
+  font-size: 1.1em;
+}
+
+/* Sección interior con fondo */
 .interiorWithBackground {
   background-color: rgba(2, 2, 66, 0.5);
   padding: 10px;
@@ -50,6 +75,7 @@ p {
   box-shadow: 1px 1px 7px rgba(0, 0, 0, 0.8);
 }
 
+/* Estilo para el select dentro de .divInterior */
 .divInterior select {
   border-radius: 8px;
   display: flex;
@@ -60,6 +86,7 @@ p {
   font-weight: bold;
 }
 
+/* Sección principal y secundaria */
 .main {
   width: 75%;
   display: flex;
@@ -79,6 +106,7 @@ p {
   border-radius: 8px;
 }
 
+/* Previsión semanal */
 .divWeekForecast {
   width: 100%;
 }
@@ -96,6 +124,7 @@ p {
   border-bottom: 1px solid rgba(156, 156, 158, 0.4);
   margin-bottom: 4px;
 }
+
 .forecastInfoGeneral {
   display: flex;
   justify-content: space-between;
@@ -125,13 +154,16 @@ p {
   height: 100%;
   overflow: auto;
 }
+
 .contentListDays h5 {
   margin: 0;
 }
+
 .contentListDays h2 {
   font-size: x-large;
 }
 
+/* Análisis de datos */
 .divAnalysis {
   display: flex;
   height: 100%;
@@ -140,7 +172,27 @@ p {
 .analysisInterior {
   padding: 20px;
   height: 100%;
+  width: 100%;
   background-image: none;
+}
+
+.analysisInteriorExtra {
+  height: 100%;
+  width: 100%;
+  background-image: none;
+  display: flex;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo para la lista de datos dentro de .divInteriorExtra */
+.divInteriorExtra ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.divInteriorExtra li {
+  font-size: 1.1em;
 }
 
 .imgDayForecast {
@@ -158,6 +210,7 @@ p {
   height: 100%;
 }
 
+/* Estado del pronóstico y gráfico horario */
 .forecastStatus {
   display: flex;
   justify-content: space-between;
@@ -171,14 +224,17 @@ p {
   background-color: white;
   margin-top: 3px;
 }
+
 /* Forecast.module.css */
 
+/* Contenedor general */
 .container {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
+/* Contenedor del día */
 .dayContainer {
   display: flex;
   align-items: center;
@@ -259,10 +315,12 @@ p {
   .content {
     padding: 0;
   }
+
   .insideContent {
     flex-direction: column;
     width: 100%;
   }
+
   .main,
   .secondary {
     width: 100%;
