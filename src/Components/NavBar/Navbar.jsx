@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
-import styles from "./Navbar.module.css";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
+import styles from "./Navbar.module.css";
 
+// Componente para cada enlace de la barra de navegación
 function NavbarLinkItem({ item, isCollapsed, setSelectedLink }) {
   return (
     <Link
@@ -16,7 +17,6 @@ function NavbarLinkItem({ item, isCollapsed, setSelectedLink }) {
       data-tooltip-place="right"
     >
       {isCollapsed && <Tooltip id={item.label} style={{ zIndex: "9999" }} />}
-
       {item.icon}
       {!isCollapsed && (
         <li
@@ -32,6 +32,7 @@ function NavbarLinkItem({ item, isCollapsed, setSelectedLink }) {
   );
 }
 
+// Componente para los enlaces de la barra de navegación
 function NavbarLinks({ links, isCollapsed, selectedLink, setSelectedLink }) {
   return (
     <ul>
@@ -58,6 +59,7 @@ function NavbarLinks({ links, isCollapsed, selectedLink, setSelectedLink }) {
   );
 }
 
+// Componente para mostrar detalles del usuario
 function UserDetails({ user, isCollapsed, handleSignOut }) {
   if (!isCollapsed) {
     return (
@@ -109,6 +111,7 @@ function UserDetails({ user, isCollapsed, handleSignOut }) {
   }
 }
 
+// Componente para el botón de cerrar barra lateral
 function CloseNav({ isCollapsed, showNavbar }) {
   return (
     <div
@@ -127,6 +130,7 @@ function CloseNav({ isCollapsed, showNavbar }) {
   );
 }
 
+// Componente para el logo de la barra lateral
 function NavbarLogo({ isCollapsed, showNavbar }) {
   return (
     <>
@@ -146,11 +150,14 @@ function NavbarLogo({ isCollapsed, showNavbar }) {
   );
 }
 
+// Componente principal de la barra lateral
 const Navbar = ({ links, user, handleSignOut }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selectedLink, setSelectedLink] = useState(null);
+  const location = useLocation(); // Obtén la ubicación actual
   const anchoCollapsed = 60;
   const anchoNotCollapsed = 260;
+
   useEffect(() => {
     const navbar = document.querySelector(`.${styles.navbar}`);
     isCollapsed
@@ -163,6 +170,11 @@ const Navbar = ({ links, user, handleSignOut }) => {
           `${anchoNotCollapsed}px`
         );
   }, [isCollapsed]);
+
+  useEffect(() => {
+    // Actualiza selectedLink cuando la URL cambia
+    setSelectedLink(location.pathname);
+  }, [location.pathname]);
 
   function addToolTips() {
     return (

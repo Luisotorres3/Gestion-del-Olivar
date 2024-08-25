@@ -7,7 +7,7 @@ const Forecast = ({ location }) => {
   const { weather } = useWeather(location);
 
   if (!weather) {
-    return <p>No weather data available</p>;
+    return <p>No hay información</p>;
   }
 
   return (
@@ -20,6 +20,7 @@ const Forecast = ({ location }) => {
             state={mapWeatherCodeToState(weather.weathercode, weather.is_day)}
             width={50}
             height={50}
+            {...(!weather.is_day && { night: true })}
           />
         </div>
       </div>
@@ -31,8 +32,8 @@ const Forecast = ({ location }) => {
 export const mapWeatherCodeToState = (code, isDay) => {
   const weatherStates = {
     0: isDay ? "sunny" : "clear-night", // Clear sky
-    1: isDay ? "partlycloudy" : "partlycloudy-night", // Mainly clear
-    2: isDay ? "partlycloudy" : "partlycloudy-night", // Partly cloudy
+    1: isDay ? "partlycloudy" : "partlycloudy", // Mainly clear
+    2: isDay ? "partlycloudy" : "partlycloudy", // Partly cloudy
     3: "cloudy", // Overcast
     45: "fog", // Fog
     48: "fog", // Rime fog

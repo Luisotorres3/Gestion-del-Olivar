@@ -12,6 +12,7 @@ import Fincas from "./Pages/Fincas/Fincas";
 import Olivos from "./Pages/Olivos/Olivos";
 import Forecast from "./Pages/Forecast/Forecast";
 import LandingPage from "./Pages/LandingPage/LandingPage"; // Asegúrate de crear este componente
+import { doSignOut } from "./Components/Authentication/Auth";
 
 function RutasApp({ user }) {
   if (!user) {
@@ -53,7 +54,7 @@ function App() {
   }, []);
 
   const handleSignOut = () => {
-    signOut(auth)
+    doSignOut()
       .then(() => {
         setUser(null);
         console.log("Sesión cerrada correctamente");

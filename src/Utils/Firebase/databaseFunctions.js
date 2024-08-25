@@ -11,6 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { getAuth } from "firebase/auth";
 
 ChartJS.register(
   CategoryScale,
@@ -27,8 +28,13 @@ const baseURLDatabase =
 
 //GET FINCAS
 export const getFincas = async () => {
+  const auth = getAuth();
+  const user = auth.currentUser;
+  const userId = user.uid;
   try {
-    const response = await axios.get(`${baseURLDatabase}/api/fincas`);
+    const response = await axios.get(`${baseURLDatabase}/api/fincas`, {
+      params: { userId },
+    });
     return response;
   } catch (error) {
     console.error(error);
@@ -96,6 +102,28 @@ export const createFinca = async (finca) => {
     }
   } catch (error) {
     console.log(error);
+  }
+};
+
+//UPDATE FINCA
+/**
+ * Actualiza los datos de una finca en el backend.
+ * @param {string} fincaId - ID de la finca a actualizar.
+ * @param {object} fincaData - Datos actualizados de la finca.
+ */
+export const updateFinca = async (fincaId, fincaData) => {
+  try {
+    const response = await axios.put(
+      `${baseURLDatabase}/api/fincas/${fincaId}`,
+      fincaData
+    );
+
+    if (response.status !== 200) {
+      throw new Error("Error al actualizar la finca");
+    }
+  } catch (error) {
+    console.error("Error al actualizar la finca:", error);
+    throw error;
   }
 };
 
@@ -199,7 +227,7 @@ export const getNumOlivos = async () => {
     const fincas = await getFincas();
 
     fincas.data.forEach((item) => {
-      count += item.data.numOlivos;
+      count += parseInt(item.data.numOlivos);
     });
     return count;
   } catch (error) {
@@ -212,6 +240,7 @@ export const getNumOlivos = async () => {
 
 //FETCH WEATHER BY CITY
 export const fetchWeather = async (city) => {
+  /*
   try {
     const response = await axios.get(
       `https://api.openweathermap.org/data/2.5/weather?q=${city},es&appid=10febab50520dc67582eed976e016d80&units=metric&lang=es`
@@ -221,6 +250,34 @@ export const fetchWeather = async (city) => {
   } catch (error) {
     console.error("Error fetching weather:", error);
   }
+  */
+  try {
+    const coords = await getCoordsForCity(city);
+    if (!coords || coords.length < 2) {
+      throw new Error("Coordenadas no válidas");
+    }
+
+    const [latitude, longitude] = coords;
+    const params = new URLSearchParams({
+      latitude,
+      longitude,
+      current: ["temperature_2m"],
+      timezone: "auto",
+    });
+
+    const url = `https://api.open-meteo.com/v1/forecast?${params.toString()}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.current.temperature_2m;
+  } catch (error) {
+    console.error("Error fetching weather data:", error.message);
+    throw error;
+  }
 };
 
 //FETCH WEATHER FOR ALL LOCATIONS
@@ -229,17 +286,18 @@ export const fetchAllTemps = async (locations) => {
 
   for (const item of locations) {
     const data = await fetchWeather(item);
-    tempMedia += Math.round(data.main.temp);
+    tempMedia += Math.round(data);
   }
-  return tempMedia;
+  const media = tempMedia / locations.length;
+  return parseFloat(media.toFixed(2));
 };
 
 //GET TEMP MEDIA
 export const getTemperaturaMedia = async () => {
   const getData = async () => {
     try {
-      const locations = await getLocations();
-      return (await fetchAllTemps(locations)) / locations.length;
+      const locations = await getLocations(false);
+      return await fetchAllTemps(locations);
     } catch (error) {
       console.error("Error al obtener la finca por ID:", error);
       throw error;
@@ -247,72 +305,6 @@ export const getTemperaturaMedia = async () => {
   };
 
   return getData();
-};
-
-//FETCH WEATHER AEMET
-export const fetchAEMET = async () => {
-  try {
-    const apiKey =
-      "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJsdWlzLnMudG9ycmVzM0BnbWFpbC5jb20iLCJqdGkiOiJlMWZhOWE3Ni1jYWNjLTRkNjMtOGUwYy0yM2U5NjRiNDhmODQiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTcxNDU5MzU4MywidXNlcklkIjoiZTFmYTlhNzYtY2FjYy00ZDYzLThlMGMtMjNlOTY0YjQ4Zjg0Iiwicm9sZSI6IiJ9.kmPsx02v15MOS_usg3oBS-nXXO_PnY3e3_EIdHLktmw";
-
-    const apiUrl =
-      "https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio/diaria/28079";
-    const response = await axios.get(`${apiUrl}/?api_key=${apiKey}`);
-    const url = response.data.datos;
-    if (response.data.estado == 200) {
-      const weatherResponse = await axios.get(url);
-      return weatherResponse;
-    }
-    return [];
-  } catch (error) {
-    console.error("Error retrieving weather data: ", error);
-    throw error;
-  }
-};
-export const fetchWeatherAEMET = async (finca) => {
-  try {
-    // Definir la API Key
-    const AK =
-      "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJsdWlzLnMudG9ycmVzM0BnbWFpbC5jb20iLCJqdGkiOiJlMWZhOWE3Ni1jYWNjLTRkNjMtOGUwYy0yM2U5NjRiNDhmODQiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTcxNDU5MzU4MywidXNlcklkIjoiZTFmYTlhNzYtY2FjYy00ZDYzLThlMGMtMjNlOTY0YjQ4Zjg0Iiwicm9sZSI6IiJ9.kmPsx02v15MOS_usg3oBS-nXXO_PnY3e3_EIdHLktmw";
-
-    // Definir URLs de solicitud
-    const URL1 =
-      "https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio/diaria/28079";
-    let URL2 = "";
-    // Make the first request
-    const response1 = await fetch(`${URL1}/?api_key=${AK}`, {
-      headers: {
-        accept: "application/json",
-      },
-    });
-
-    const response = await axios.get(`${URL1}/?api_key=${AK}`, {
-      "Access-Control-Allow-Origin": "*",
-    });
-    const data1 = await response1.json();
-
-    if (data1.estado == 200) {
-      // Get the "datos" field from the first response
-      URL2 = data1.datos;
-      console.log("U2");
-      console.log(URL2);
-      // Make the second request
-      const response2 = await fetch(URL2, {
-        headers: {
-          accept: "application/json",
-        },
-      });
-      console.log("R2");
-      console.log(response2);
-      const data2 = await response2.json();
-
-      if (data2.estado == 200) return data2;
-      return [];
-    }
-    return [];
-  } catch (error) {
-    console.error("Error al obtener datos:", error);
-  }
 };
 
 // ----------------------------------------------

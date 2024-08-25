@@ -4,18 +4,80 @@ import TileLayer from "ol/layer/Tile";
 import View from "ol/View";
 import BingMaps from "ol/source/BingMaps";
 import Map from "ol/Map";
-import Feature from "ol/Feature.js";
-import { Point, Polygon } from "ol/geom.js";
-import { Vector as VectorLayer } from "ol/layer.js";
-import { Vector as VectorSource } from "ol/source.js";
+import Feature from "ol/Feature";
+import { Point, Polygon } from "ol/geom";
+import { Vector as VectorLayer } from "ol/layer";
+import { Vector as VectorSource } from "ol/source";
 import { fromLonLat, toLonLat } from "ol/proj";
 import { Fill, Icon, Stroke, Style } from "ol/style";
 import Overlay from "ol/Overlay";
-import { FullScreen, defaults as defaultControls } from "ol/control.js";
-import { Tooltip } from "bootstrap";
-import styles from "./Map.module.css";
-import { toStringHDMS } from "ol/coordinate";
+import { FullScreen, defaults as defaultControls } from "ol/control";
+import { Draw } from "ol/interaction";
 import { getCenter } from "ol/extent";
+import styles from "./Map.module.css";
+import { Tooltip } from "bootstrap";
+
+const exportLayerToImage = (map, vectorLayer) => {
+  if (!vectorLayer) {
+    console.error("No hay capa vectorial disponible.");
+    return;
+  }
+
+  const vectorSource = vectorLayer.getSource();
+  if (!vectorSource) {
+    console.error("No hay fuente vectorial disponible.");
+    return;
+  }
+
+  const features = vectorSource.getFeatures();
+  if (features.length === 0) {
+    console.error("No hay características en la capa vectorial.");
+    return;
+  }
+
+  // Crear un canvas
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+
+  // Obtener la geometría del primer polígono dibujado
+  const polygon = features[0].getGeometry();
+  const extent = polygon.getExtent();
+
+  // Calcular tamaño del canvas
+  const width = extent[2] - extent[0];
+  const height = extent[3] - extent[1];
+  canvas.width = 500; // Tamaño de la imagen
+  canvas.height = 500;
+
+  // Normalizar coordenadas
+  const coordinates = polygon.getCoordinates()[0].map((coord) => {
+    const x = (coord[0] - extent[0]) / width;
+    const y = (extent[3] - coord[1]) / height;
+    return [x * canvas.width, y * canvas.height];
+  });
+
+  // Dibujar el polígono en el canvas
+  context.beginPath();
+  context.moveTo(coordinates[0][0], coordinates[0][1]);
+
+  for (let i = 1; i < coordinates.length; i++) {
+    context.lineTo(coordinates[i][0], coordinates[i][1]);
+  }
+
+  context.closePath();
+  context.fillStyle = "rgba(0, 0, 255, 0.2)";
+  context.strokeStyle = "blue";
+  context.lineWidth = 2;
+  context.fill();
+  context.stroke();
+
+  // Exportar el canvas como imagen
+  const imgData = canvas.toDataURL("image/png");
+  const link = document.createElement("a");
+  link.href = imgData;
+  link.download = "polygon.png";
+  link.click();
+};
 
 function flyTo(location, done, view) {
   const duration = 4000;
@@ -60,18 +122,41 @@ const MapComp = forwardRef((props, ref) => {
     zoom,
     markerCoords,
     controls,
-    showFincas,
+    showFincas = true,
     fincas,
+    currentCoords,
+    editMode = false,
+    onPolygonDrawn,
   } = props;
+
   const mapRef = useRef();
+  const [vectorSource, setVectorSource] = useState(null);
+  const [drawInteraction, setDrawInteraction] = useState(null);
+  const [vectorLayer, setVectorLayer] = useState(null);
 
   useEffect(() => {
     let coordinates = [-416653.71, 4588115.81];
-    if (fincas && fincas.length > 0) {
-      coordinates = fromLonLat([
-        fincas[0].data.localizacion.longitud,
-        fincas[0].data.localizacion.latitud,
-      ]);
+    if (currentCoords) {
+      coordinates = fromLonLat([currentCoords[1], currentCoords[0]]);
+    } else {
+      if (fincas && fincas.length > 0) {
+        const firstFinca = fincas[0];
+        if (firstFinca.data.coordenadasFinca) {
+          // Convertir coordenadasFinca en un array de coordenadas
+          const coordenadasArray = JSON.parse(firstFinca.data.coordenadasFinca);
+
+          // Crear un polígono con las coordenadas
+          const polygon = new Polygon([coordenadasArray]);
+          const extent = polygon.getExtent();
+          coordinates = getCenter(extent); // Obtener el centro del polígono
+        } else {
+          // Si no hay coordenadasFinca, usa las coordenadas de localizacion
+          coordinates = fromLonLat([
+            firstFinca.data.localizacion.longitud,
+            firstFinca.data.localizacion.latitud,
+          ]);
+        }
+      }
     }
 
     const fullScreenControl = new FullScreen({ tipLabel: "Pantalla Completa" });
@@ -94,16 +179,16 @@ const MapComp = forwardRef((props, ref) => {
     });
 
     mapRef.current = map;
-
+    /*
     mapRef.current.on("loadstart", function () {
       mapRef.current.getTargetElement().classList.add("spinner");
     });
     mapRef.current.on("loadend", function () {
       mapRef.current.getTargetElement().classList.remove("spinner");
     });
+    */
 
     fullScreenControl.on("enterfullscreen", () => {
-      // Cambiar el contenido del tooltip cuando se entra en pantalla completa
       const tooltipElements = document.querySelectorAll(".ol-full-screen-true");
       tooltipElements.forEach((el) => {
         const tooltip = Tooltip.getInstance(el);
@@ -111,7 +196,6 @@ const MapComp = forwardRef((props, ref) => {
           tooltip.setContent({
             ".tooltip-inner": "Salir de pantalla completa",
           });
-          // Agregar evento para ocultar el tooltip cuando el cursor sale del botón
           el.addEventListener("mouseleave", () => {
             tooltip.hide();
           });
@@ -120,7 +204,6 @@ const MapComp = forwardRef((props, ref) => {
     });
 
     fullScreenControl.on("leavefullscreen", () => {
-      // Restaurar el contenido original del tooltip cuando se sale de pantalla completa
       const tooltipElements = document.querySelectorAll(
         ".ol-full-screen-false"
       );
@@ -128,7 +211,6 @@ const MapComp = forwardRef((props, ref) => {
         const tooltip = Tooltip.getInstance(el);
         if (tooltip) {
           tooltip.setContent({ ".tooltip-inner": "Pantalla Completa" });
-          // Eliminar el evento 'mouseleave' para evitar que se oculte el tooltip cuando el cursor sale del botón
           el.removeEventListener("mouseleave", () => {
             tooltip.hide();
           });
@@ -146,11 +228,8 @@ const MapComp = forwardRef((props, ref) => {
         });
 
       if (fincas && fincas.length > 0) {
-        //Añadir Selector de Fincas
-        // Crear el elemento select
         const select = document.createElement("select");
 
-        // Crear un array de elementos option usando map
         const optionElements = fincas.map((finca) => {
           const option = document.createElement("option");
           option.text = finca.data.localizacion.municipio;
@@ -158,26 +237,20 @@ const MapComp = forwardRef((props, ref) => {
           return option;
         });
 
-        // Agregar los elementos option al select
         optionElements.forEach((option) => select.add(option));
 
-        // Establecer estilos para el select
         select.className = styles.selectStyle;
 
-        // Añadir el select al contenedor del mapa
         mapRef.current.getViewport().appendChild(select);
 
-        // Agregar evento de cambio al select
         select.addEventListener("change", function (event) {
-          const selectedOption = event.target.value; // Obtener el valor de la opción seleccionada
-          // Obtener las coordenadas correspondientes a la opción seleccionada
+          const selectedOption = event.target.value;
           const selectedFinca = JSON.parse(selectedOption);
 
           const coordinates = fromLonLat([
             selectedFinca.localizacion.longitud,
             selectedFinca.localizacion.latitud,
           ]);
-          // Animar la vista del mapa hacia las coordenadas
           if (coordinates) {
             flyTo(coordinates, function () {}, mapRef.current.getView());
           }
@@ -185,57 +258,85 @@ const MapComp = forwardRef((props, ref) => {
       }
     }
 
+    if (editMode) {
+      const vectorSource = new VectorSource();
+      setVectorSource(vectorSource);
+
+      const vectorLayer = new VectorLayer({
+        source: vectorSource,
+        style: new Style({
+          stroke: new Stroke({
+            color: "blue",
+            width: 2,
+          }),
+          fill: new Fill({
+            color: "rgba(0, 0, 255, 0.2)",
+          }),
+        }),
+      });
+
+      map.addLayer(vectorLayer);
+      setVectorLayer(vectorLayer);
+
+      const draw = new Draw({
+        source: vectorSource,
+        type: "Polygon",
+      });
+
+      draw.on("drawend", (event) => {
+        const feature = event.feature;
+        const coordinates = feature.getGeometry().getCoordinates();
+        if (onPolygonDrawn) {
+          onPolygonDrawn(coordinates);
+        }
+        map.removeInteraction(draw);
+        setDrawInteraction(null);
+      });
+
+      setDrawInteraction(draw);
+      map.addInteraction(draw);
+    }
+
     return () => {
       if (mapRef.current) {
         mapRef.current.setTarget(null);
       }
     };
-  }, [target, zoom, controls]);
+  }, [target, zoom, controls, editMode, fincas, currentCoords]);
 
   useEffect(() => {
-    if (mapRef.current && showFincas && fincas.length > 0) {
+    if (
+      mapRef.current &&
+      showFincas &&
+      Array.isArray(fincas) &&
+      fincas.length > 0
+    ) {
       const overlay = new Overlay({
-        element: null, // El elemento se establecerá dinámicamente
-        positioning: "center-center", // Posicionamiento del popup
-        autoPan: true, // Permitir el auto-ajuste del popup
+        element: null,
+        positioning: "center-center",
+        autoPan: true,
         autoPanAnimation: {
-          duration: 250, // Duración de la animación de auto-ajuste
+          duration: 250,
         },
       });
 
       mapRef.current.addOverlay(overlay);
-      // Obtener el centro de la localización
 
       const features = [];
       fincas.forEach((finca) => {
         if (
-          finca.data.localizacion.longitud !== undefined &&
-          finca.data.localizacion.latitud !== undefined
+          finca.data &&
+          finca.data.coordenadasFinca &&
+          finca.data.coordenadasFinca.length > 0
         ) {
-          const center = fromLonLat([
-            finca.data.localizacion.longitud,
-            finca.data.localizacion.latitud,
-          ]);
-
-          // Calcular el ancho y el largo del rectángulo a partir del área
-          const area = parseFloat(
-            finca.data.superficieConstruida.replace(/[^\d.-]/g, "")
-          ); // Convertir la superficie a un número
-          const ancho = Math.sqrt(area); // Calcular la raíz cuadrada del área para obtener el ancho
-          const largo = ancho; // Calcular el largo dividiendo el área por el ancho
-
-          // Calcular los vértices del rectángulo
-          const v1 = [center[0] - ancho / 2, center[1] - largo / 2]; // Esquina superior izquierda
-          const v2 = [center[0] - ancho / 2, center[1] + largo / 2]; // Esquina inferior izquierda
-          const v3 = [center[0] + ancho / 2, center[1] + largo / 2]; // Esquina inferior derecha
-          const v4 = [center[0] + ancho / 2, center[1] - largo / 2]; // Esquina superior derecha
-
-          const rectangleCoords = [v1, v2, v3, v4, v1];
-          const rectangleFeature = new Feature({
-            geometry: new Polygon([rectangleCoords]),
+          // Usar coordenadas directamente
+          const coords = finca.data.coordenadasFinca;
+          const coordenadasArray = JSON.parse(coords);
+          const polygonFeature = new Feature({
+            geometry: new Polygon([coordenadasArray]),
             fincaName: "Finca",
           });
-          features.push(rectangleFeature);
+          features.push(polygonFeature);
         }
       });
 
@@ -262,8 +363,6 @@ const MapComp = forwardRef((props, ref) => {
         container.className = styles.olPopup2;
         container.appendChild(content);
 
-        // Agregar evento para ocultar el popup cuando el cursor sale del marcador
-
         overlay.setElement(container);
         const feature = mapRef.current.forEachFeatureAtPixel(
           evt.pixel,
@@ -273,32 +372,28 @@ const MapComp = forwardRef((props, ref) => {
         );
         if (feature) {
           content.innerHTML = feature.get("fincaName");
-          // Obtener la geometría del feature
           const geometry = feature.getGeometry();
 
           if (geometry instanceof Polygon) {
-            // Obtener la extensión de la geometría
             const extent = geometry.getExtent();
-
-            // Calcular el centro de la extensión
             const center = getCenter(extent);
-
-            // Establecer la posición del overlay en el centro de la geometría
             overlay.setPosition(center);
           } else {
-            // Si la geometría no es un polígono, usar la coordenada del evento
             overlay.setPosition(evt.coordinate);
           }
         } else {
-          // Si no hay ningún marcador bajo el cursor, ocultar el popup
           overlay.setPosition(undefined);
         }
       });
     }
-  }, [showFincas]);
+  }, [showFincas, fincas]);
 
   useEffect(() => {
-    if (mapRef.current && markerCoords) {
+    if (
+      mapRef.current &&
+      Array.isArray(markerCoords) &&
+      markerCoords.length > 0
+    ) {
       const overlay = new Overlay({
         element: null,
         positioning: "center-center",
@@ -346,7 +441,6 @@ const MapComp = forwardRef((props, ref) => {
         const container = document.createElement("div");
         container.className = styles.olPopup;
         container.appendChild(content);
-        // Agregar evento para ocultar el popup cuando el cursor sale del marcador
         container.onmouseleave = function () {
           overlay.setPosition(undefined);
           return false;
@@ -367,7 +461,6 @@ const MapComp = forwardRef((props, ref) => {
           content.innerHTML = toTitleCase(feature.get("municipio"));
           overlay.setPosition(coordinates);
         } else {
-          // Si no hay ningún marcador bajo el cursor, ocultar el popup
           overlay.setPosition(undefined);
         }
       });

@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styles from "./Gestion.module.css";
 import { Tooltip } from "react-tooltip";
 import { Modal, Button, Form, FloatingLabel } from "react-bootstrap";
 import {
   createFinca,
   getCoordsForCity,
+  updateFinca,
 } from "../../Utils/Firebase/databaseFunctions";
+import { getAuth } from "firebase/auth"; // Importa getAuth de Firebase
 
-function PopupForm({ isOpen, onClose, fetchFincas }) {
+// Componente PopupForm para crear y editar fincas
+import MapComp from "../Map/Map";
+
+export function PopupForm({ isOpen, onClose, fetchFincas, fincaToEdit }) {
   const [formData, setFormData] = useState({
     referenciaCatastral: "",
     localizacion: {
@@ -18,267 +23,338 @@ function PopupForm({ isOpen, onClose, fetchFincas }) {
       latitud: "",
       longitud: "",
     },
-    clase: "",
-    usoPrincipal: "",
     superficieConstruida: "",
     anoConstruccion: "",
     numOlivos: "",
   });
 
+  const [currentUser, setCurrentUser] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1); // Estado para controlar la vista actual
+  const [coords, setCoords] = useState(null);
+  const mapRef = useRef();
+
+  useEffect(() => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    setCurrentUser(user ? user.uid : null);
+  }, []);
+
+  useEffect(() => {
+    if (fincaToEdit) {
+      setFormData(fincaToEdit.data); // Actualiza los datos del formulario con los datos de la finca a editar
+    } else {
+      setCurrentPage(1);
+      setFormData({
+        referenciaCatastral: "",
+        localizacion: {
+          direccion: "",
+          municipio: "",
+          codigoPostal: "",
+          pais: "",
+          latitud: "",
+          longitud: "",
+        },
+        superficieConstruida: "",
+        anoConstruccion: "",
+        numOlivos: "",
+      });
+    }
+  }, [fincaToEdit]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    // Si el campo que está cambiando no está dentro de localizacion, actualizamos directamente
-    if (name !== "localizacion") {
+    if (["direccion", "municipio", "codigoPostal", "pais"].includes(name)) {
+      setFormData((prevState) => ({
+        ...prevState,
+        localizacion: {
+          ...prevState.localizacion,
+          [name]: value,
+        },
+      }));
+    } else {
       setFormData((prevState) => ({
         ...prevState,
         [name]: value,
       }));
-    } else {
-      // Si el campo que está cambiando está dentro de localizacion, necesitamos actualizar localizacion
-      // de manera diferente ya que es un objeto anidado
-      const { localizacion: prevLocalizacion, ...rest } = formData;
-      setFormData({
-        ...rest,
-        localizacion: {
-          ...prevLocalizacion,
-          [e.target.name]: e.target.value,
-        },
-      });
     }
   };
 
-  const handleLocationChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setCoords(await getCoordsForCity(formData.localizacion.municipio));
+      formData.localizacion.latitud = coords[0];
+      formData.localizacion.longitud = coords[1];
+
+      // Agregar el usuario actual a los datos del formulario
+      const newFincaData = { ...formData, usuario: currentUser };
+      if (fincaToEdit) {
+        // Actualiza una finca existente
+
+        await updateFinca(fincaToEdit.id, newFincaData);
+      } else {
+        // Crea una nueva finca
+        console.log(newFincaData);
+        await createFinca(newFincaData);
+      }
+
+      fetchFincas(); // Refresca la lista de fincas
+      onClose(); // Cierra el formulario
+      setFormData({
+        referenciaCatastral: "",
+        localizacion: {
+          direccion: "",
+          municipio: "",
+          codigoPostal: "",
+          pais: "",
+          latitud: "",
+          longitud: "",
+        },
+        superficieConstruida: "",
+        anoConstruccion: "",
+        numOlivos: "",
+      });
+    } catch (error) {
+      console.error("Error al guardar la finca:", error);
+    }
+  };
+
+  const handleMapClick = (coordinate) => {
+    setFormData((prevData) => ({
+      ...prevData,
       localizacion: {
-        ...prevState.localizacion,
-        [name]: value,
+        ...prevData.localizacion,
+        latitud: coordinate[1],
+        longitud: coordinate[0],
       },
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Aquí puedes enviar los datos a la API o hacer lo que necesites con ellos
-    const create = async () => {
-      try {
-        const coords = await getCoordsForCity(formData.localizacion.municipio);
-        formData.localizacion.latitud = coords[0];
-        formData.localizacion.longitud = coords[1];
-        await createFinca(formData);
-        fetchFincas();
-        setFormData({
-          referenciaCatastral: "",
-          localizacion: {
-            direccion: "",
-            municipio: "",
-            codigoPostal: "",
-            pais: "",
-            latitud: "",
-            longitud: "",
-          },
-          clase: "",
-          usoPrincipal: "",
-          superficieConstruida: "",
-          anoConstruccion: "",
-          numOlivos: "",
-        });
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    create();
-    console.log("Datos enviados:", formData);
-    onClose();
+  const handlePolygonDrawn = (coordinates) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      coordenadasFinca: coordinates,
+    }));
   };
 
+  const cambiarDePagina = async (numPagina) => {
+    if (numPagina == 2) {
+      try {
+        setCoords(await getCoordsForCity(formData.localizacion.municipio));
+        setCurrentPage(numPagina);
+      } catch (error) {
+        console.error("Error al guardar las coordenadas:", error);
+      }
+    } else {
+      setCurrentPage(numPagina);
+    }
+  };
   return (
     <Modal show={isOpen} onHide={onClose}>
-      <Modal.Header closeButton>
-        <Modal.Title>Registrar Finca</Modal.Title>
+      <Modal.Header closeButton onClick={onClose}>
+        <Modal.Title>
+          {fincaToEdit ? "Editar Finca" : "Registrar Finca"}
+        </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form onSubmit={handleSubmit}>
-          <FloatingLabel
-            controlId="floatingInput"
-            label="Referencia Catastral"
-            className="mb-3"
-          >
-            <Form.Control
-              type="text"
-              name="referenciaCatastral"
-              placeholder="14900A081000100001FZ"
-              value={formData.referenciaCatastral}
-              onChange={handleChange}
-            />
-          </FloatingLabel>
-          <FloatingLabel
-            controlId="direccionInput"
-            label="Dirección"
-            className="mb-3"
-          >
-            <Form.Control
-              type="text"
-              name="direccion"
-              value={formData.localizacion.direccion}
-              onChange={handleLocationChange}
-              placeholder="Dirección"
-              required
-            />
-          </FloatingLabel>
-
-          <FloatingLabel
-            controlId="municipioInput"
-            label="Municipio"
-            className="mb-3"
-          >
-            <Form.Control
-              type="text"
-              name="municipio"
-              value={formData.localizacion.municipio}
-              onChange={handleLocationChange}
-              placeholder="Municipio"
-              required
-            />
-          </FloatingLabel>
-
-          <FloatingLabel
-            controlId="codigoPostalInput"
-            label="Código Postal"
-            className="mb-3"
-          >
-            <Form.Control
-              type="text"
-              name="codigoPostal"
-              value={formData.localizacion.codigoPostal}
-              onChange={handleLocationChange}
-              placeholder="Código Postal"
-              required
-            />
-          </FloatingLabel>
-
-          <FloatingLabel controlId="paisInput" label="País" className="mb-3">
-            <Form.Control
-              type="text"
-              name="pais"
-              value={formData.localizacion.pais}
-              onChange={handleLocationChange}
-              placeholder="País"
-              required
-            />
-          </FloatingLabel>
-
-          <FloatingLabel controlId="claseInput" label="Clase" className="mb-3">
-            <Form.Control
-              as="select"
-              name="clase"
-              value={formData.clase}
-              onChange={handleChange}
+        {currentPage === 1 ? (
+          <Form onSubmit={(e) => e.preventDefault()}>
+            <FloatingLabel
+              controlId="floatingInput"
+              label="Referencia Catastral"
+              className="mb-2"
             >
-              <option value="">Seleccionar Clase</option>
-              <option value="Rústico">Rústico</option>
-              <option value="Residencial">Residencial</option>
-              <option value="Comercial">Comercial</option>
-              <option value="Industrial">Industrial</option>
-              <option value="Agrícola">Agrícola</option>
-            </Form.Control>
-          </FloatingLabel>
+              <Form.Control
+                type="text"
+                name="referenciaCatastral"
+                placeholder="14900A081000100001FZ"
+                value={formData.referenciaCatastral}
+                onChange={handleChange}
+                required
+              />
+            </FloatingLabel>
 
-          <FloatingLabel
-            controlId="usoInput"
-            label="Uso Principal"
-            className="mb-3"
-          >
-            <Form.Control
-              as="select"
-              name="usoPrincipal"
-              value={formData.usoPrincipal}
-              onChange={handleChange}
+            <FloatingLabel
+              controlId="direccionInput"
+              label="Dirección"
+              className="mb-2"
             >
-              <option value="">Seleccionar Uso Principal</option>
-              <option value="Agrario">Agrario</option>
-              <option value="Vivienda">Vivienda</option>
-              <option value="Oficina">Oficina</option>
-              <option value="Almacén">Almacén</option>
-              <option value="Terreno">Terreno</option>
-            </Form.Control>
-          </FloatingLabel>
+              <Form.Control
+                type="text"
+                name="direccion"
+                value={formData.localizacion.direccion}
+                onChange={handleChange}
+                placeholder="Dirección"
+                required
+              />
+            </FloatingLabel>
 
-          <FloatingLabel
-            controlId="superficieInput"
-            label="Superficie Construida"
-            className="mb-3"
-          >
-            <Form.Control
-              type="number"
-              name="superficieConstruida"
-              value={formData.superficieConstruida}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-            />
-          </FloatingLabel>
-
-          <FloatingLabel
-            controlId="anoInput"
-            label="Año de construcción"
-            className="mb-3"
-          >
-            <Form.Control
-              as="select"
-              name="anoConstruccion"
-              value={formData.anoConstruccion}
-              onChange={handleChange}
+            <FloatingLabel
+              controlId="municipioInput"
+              label="Municipio"
+              className="mb-2"
             >
-              <option value="">Seleccionar Año</option>
-              {Array.from(
-                { length: new Date().getFullYear() - 1900 + 1 },
-                (_, index) => (
-                  <option key={index} value={1900 + index}>
-                    {1900 + index}
-                  </option>
-                )
-              )}
-            </Form.Control>
-          </FloatingLabel>
+              <Form.Control
+                type="text"
+                name="municipio"
+                value={formData.localizacion.municipio}
+                onChange={handleChange}
+                placeholder="Municipio"
+                required
+              />
+            </FloatingLabel>
 
-          <FloatingLabel
-            controlId="olivosInput"
-            label="Nº de Olivos"
-            className="mb-3"
-          >
-            <Form.Control
-              type="number"
-              name="numOlivos"
-              value={formData.numOlivos}
-              onChange={handleChange}
-              min="0"
-            />
-          </FloatingLabel>
+            <FloatingLabel
+              controlId="codigoPostalInput"
+              label="Código Postal"
+              className="mb-2"
+            >
+              <Form.Control
+                type="text"
+                name="codigoPostal"
+                value={formData.localizacion.codigoPostal}
+                onChange={handleChange}
+                placeholder="Código Postal"
+                required
+              />
+            </FloatingLabel>
 
-          <Button variant="primary" type="submit">
-            Enviar
-          </Button>
-        </Form>
+            <FloatingLabel controlId="paisInput" label="País" className="mb-2">
+              <Form.Control
+                type="text"
+                name="pais"
+                value={formData.localizacion.pais}
+                onChange={handleChange}
+                placeholder="País"
+                required
+              />
+            </FloatingLabel>
+
+            <FloatingLabel
+              controlId="superficieInput"
+              label="Superficie Construida"
+              className="mb-2"
+            >
+              <Form.Control
+                type="number"
+                name="superficieConstruida"
+                value={formData.superficieConstruida}
+                onChange={handleChange}
+                min="0"
+                step="0.01"
+                required
+              />
+            </FloatingLabel>
+
+            <FloatingLabel
+              controlId="anoInput"
+              label="Año de Construcción"
+              className="mb-2"
+            >
+              <Form.Control
+                as="select"
+                name="anoConstruccion"
+                value={formData.anoConstruccion}
+                onChange={handleChange}
+              >
+                <option value="">Seleccionar Año</option>
+                {Array.from(
+                  { length: new Date().getFullYear() - 1900 + 1 },
+                  (_, index) => (
+                    <option key={index} value={1900 + index}>
+                      {1900 + index}
+                    </option>
+                  )
+                )}
+              </Form.Control>
+            </FloatingLabel>
+
+            <FloatingLabel
+              controlId="olivosInput"
+              label="Número de Olivos"
+              className="mb-2"
+            >
+              <Form.Control
+                type="number"
+                name="numOlivos"
+                value={formData.numOlivos}
+                onChange={handleChange}
+                min="0"
+                required
+              />
+            </FloatingLabel>
+
+            <Button
+              variant="primary"
+              onClick={() => cambiarDePagina(2)}
+              disabled={
+                !formData.referenciaCatastral ||
+                !formData.localizacion.direccion ||
+                !formData.localizacion.municipio ||
+                !formData.localizacion.codigoPostal ||
+                !formData.localizacion.pais ||
+                !formData.superficieConstruida ||
+                !formData.anoConstruccion ||
+                !formData.numOlivos
+              }
+            >
+              {fincaToEdit ? "Actualizar" : "Ir al Mapa"}
+            </Button>
+          </Form>
+        ) : (
+          <MapComp
+            ref={mapRef}
+            target={"map"}
+            width="100%"
+            height="500px"
+            zoom="15"
+            currentCoords={coords}
+            editMode={true}
+            onPolygonDrawn={handlePolygonDrawn}
+          />
+        )}
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={onClose}>
-          Cerrar
-        </Button>
+        {currentPage === 2 && (
+          <Button variant="secondary" onClick={() => setCurrentPage(1)}>
+            Volver al Formulario
+          </Button>
+        )}
+        {currentPage === 2 && (
+          <Button variant="primary" onClick={handleSubmit}>
+            {fincaToEdit ? "Actualizar" : "Enviar"}
+          </Button>
+        )}
+        {currentPage === 1 && (
+          <Button variant="secondary" onClick={onClose}>
+            Cerrar
+          </Button>
+        )}
       </Modal.Footer>
     </Modal>
   );
 }
 
+// Componente principal que muestra la lista de fincas
 const Fincas = ({ fincas, mostrarInmuebleId, handleDelete, fetchFincas }) => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [fincaToEdit, setFincaToEdit] = useState(null);
 
+  // Abre el formulario emergente para crear una nueva finca
   const openPopup = () => {
+    setFincaToEdit(null); // No hay finca para editar
     setIsPopupOpen(true);
   };
 
+  // Abre el formulario emergente para editar una finca existente
+  const openEditPopup = (finca) => {
+    setFincaToEdit(finca); // Establece la finca a editar
+    setIsPopupOpen(true);
+  };
+
+  // Cierra el formulario emergente
   const closePopup = () => {
+    setFincaToEdit(null);
     setIsPopupOpen(false);
   };
 
@@ -291,6 +367,7 @@ const Fincas = ({ fincas, mostrarInmuebleId, handleDelete, fetchFincas }) => {
             isOpen={isPopupOpen}
             onClose={closePopup}
             fetchFincas={fetchFincas}
+            fincaToEdit={fincaToEdit}
           />
         </div>
         {fincas && (
@@ -301,7 +378,7 @@ const Fincas = ({ fincas, mostrarInmuebleId, handleDelete, fetchFincas }) => {
                   data-tooltip-id="add"
                   data-tooltip-content="Crear Finca"
                   data-tooltip-place="top"
-                  onClick={() => openPopup()}
+                  onClick={openPopup}
                 >
                   <i className="fa fa-plus-square-o" aria-hidden="true"></i>
                   <Tooltip id="add" style={{ zIndex: "9999" }} />
@@ -310,12 +387,10 @@ const Fincas = ({ fincas, mostrarInmuebleId, handleDelete, fetchFincas }) => {
               <table>
                 <thead>
                   <tr>
-                    <th>Referencia catastral</th>
+                    <th>Referencia Catastral</th>
                     <th>Localización</th>
-                    <th>Clase</th>
-                    <th>Uso principal</th>
-                    <th>Superficie construida</th>
-                    <th>Año construcción</th>
+                    <th>Superficie Construida</th>
+                    <th>Año Construcción</th>
                     <th>Opciones</th>
                   </tr>
                 </thead>
@@ -324,9 +399,6 @@ const Fincas = ({ fincas, mostrarInmuebleId, handleDelete, fetchFincas }) => {
                     <tr key={index}>
                       <td>{finca.data.referenciaCatastral}</td>
                       <td>{`${finca.data.localizacion.direccion}, ${finca.data.localizacion.municipio}, ${finca.data.localizacion.codigoPostal}, ${finca.data.localizacion.pais}`}</td>
-
-                      <td>{finca.data.clase}</td>
-                      <td>{finca.data.usoPrincipal}</td>
                       <td>{finca.data.superficieConstruida}</td>
                       <td>{finca.data.anoConstruccion}</td>
                       <td>
@@ -340,6 +412,7 @@ const Fincas = ({ fincas, mostrarInmuebleId, handleDelete, fetchFincas }) => {
                             <i className="fa fa-eye" aria-hidden="true"></i>
                           </button>
                           <button
+                            onClick={() => openEditPopup(finca)}
                             data-tooltip-id="edit"
                             data-tooltip-content="Editar"
                             data-tooltip-place="top"

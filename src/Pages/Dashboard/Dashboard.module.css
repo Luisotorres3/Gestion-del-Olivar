@@ -1,9 +1,50 @@
-/* DASHBOARD CSS*/
+/* Ajustes de fuente para párrafos dentro del contenedor principal */
 .container p {
   font-size: 1.2dvw !important;
 }
 
 /* Dashboard - Contenedor general*/
+/* Centrar contenido mientras se cargan los datos */
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Estilos para cuando no hay fincas */
+.noFincasContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+  color: #333;
+  background-color: #f9f9f9;
+}
+
+.noFincasContainer h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.createFincaLink {
+  font-size: 18px;
+  color: #007bff;
+  text-decoration: none;
+  border: 1px solid #007bff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.createFincaLink:hover {
+  background-color: #007bff;
+  color: #fff;
+}
+
+/* Contenedor principal del dashboard */
 .container {
   height: 100%;
   width: 100%;
@@ -11,10 +52,12 @@
   flex-direction: column;
 }
 
+/* Título del dashboard */
 .title {
   padding: 40px 40px 0 40px;
 }
 
+/* Contenedor de contenido principal */
 .content {
   width: 100%;
   height: 100%;
@@ -23,13 +66,17 @@
   justify-content: start;
 }
 
-/* Dashboard - Estadisticas*/
+/* Dashboard - Estadísticas*/
+
+/* Contenedor de las secciones de estadísticas */
 .estadisticas {
   display: flex;
   flex-direction: column;
   width: 100%;
   padding: 20px;
 }
+
+/* Estilo para la sección secundaria dentro de las estadísticas */
 .secundario {
   width: 40%;
   height: 100%;
@@ -37,6 +84,7 @@
   flex-direction: column;
 }
 
+/* Contenedor general para los componentes de estadísticas */
 .contentDiv {
   height: 35%;
   width: 100%;
@@ -45,10 +93,13 @@
   padding: 20px;
   border-radius: 8px;
 }
+
+/* Estilo para los contenedores que no son el primero dentro de contentDiv */
 .contentDiv:not(:first-child) {
   margin-top: 8px;
 }
 
+/* Contenedor de tarjetas dentro de la sección de estadísticas */
 .cardContent {
   display: flex;
   height: 20%;
@@ -57,61 +108,46 @@
   margin-bottom: 8px;
 }
 
+/* Contenedor del mapa dentro de las estadísticas */
 .mapContent {
   height: 100%;
   border-radius: 8px;
 }
 
+/* Ajuste para mapas pequeños */
 .smallMap {
   padding: 0;
 }
 
-/* Dashboard - Notificationes*/
+/* Dashboard - Notificaciones y Alertas*/
+
+/* Contenedor de notificaciones */
 .notificationsDiv {
   height: 25%;
 }
+
+/* Contenedor de la lista de notificaciones */
 .notifications {
   height: 100%;
   width: 100%;
   overflow: auto;
 }
 
+/* Estilo para la lista de notificaciones */
 .notifications ul {
   padding: 0;
 }
 
+/* Estilo para los elementos individuales de la lista de notificaciones */
 .notifications li {
   list-style: none;
   margin-bottom: 5px;
   border-bottom: 1px solid #bbb;
 }
 
-/* Dashboard - Alertas*/
-.alertas {
-  padding: 20px 20px 0 20px;
-  height: fit-content;
-  font-size: 1.3rem;
-  position: absolute;
-  right: 0;
-  height: auto;
-}
-.navAlertas {
-  display: flex;
-  flex-direction: column;
-  justify-content: start;
-}
+/* Dashboard - Información Meteorológica (Forecast)*/
 
-.navAlertas ul {
-  padding: 0;
-}
-
-.navAlertas li {
-  list-style: none;
-  border-bottom: 1px solid black;
-  font-size: 16px;
-  padding: 10px;
-}
-
+/* Contenedor principal de la sección de forecast */
 .forecast {
   position: relative;
   width: 100%;
@@ -121,6 +157,7 @@
   padding: 0;
 }
 
+/* Contenido dentro de la sección de forecast */
 .forecastContent {
   padding: 5px 20px 20px 20px;
   height: 100%;
@@ -130,6 +167,7 @@
   overflow: auto;
 }
 
+/* Fondo de video para la sección de forecast */
 .background {
   position: absolute;
   top: 0;
@@ -139,6 +177,7 @@
   overflow: hidden;
 }
 
+/* Estilo del video de fondo */
 .video {
   position: absolute;
   top: 0;
@@ -148,6 +187,7 @@
   object-fit: cover;
 }
 
+/* Botón para ver más pronósticos */
 .buttonMasForecast {
   position: absolute;
   left: 50%;
@@ -155,48 +195,60 @@
   bottom: 0;
 }
 
-/* RESPONSIVE */
+/* Estilos Responsivos */
 
 @media screen and (max-width: 768px) {
+  /* Ajustes generales para pantallas pequeñas */
   .content {
     flex-direction: column;
     height: auto;
     padding: 0;
   }
+
+  /* Ajuste de tamaño de fuente en pantallas pequeñas */
   .content p {
     font-size: 20px !important;
   }
 
+  /* Ajustes en las estadísticas para pantallas pequeñas */
   .estadisticas {
     padding: 10px 10px 0 10px;
   }
 
+  /* Ajustes en los contenedores de contenido para pantallas pequeñas */
   .contentDiv {
     margin: 0;
     padding: 0;
     height: 300px;
   }
 
+  /* Ajuste de la sección secundaria en pantallas pequeñas */
   .secundario {
     flex-direction: column;
     width: 100%;
   }
 
+  /* Ajustes del contenedor de mapas en pantallas pequeñas */
   .mapContent {
     height: 300px;
   }
 
+  /* Ajuste del contenedor de tarjetas en pantallas pequeñas */
   .cardContent {
     display: grid;
     grid-template-columns: 1fr;
     height: min-content;
     gap: 0;
   }
+
+  /* Ajustes para las tarjetas individuales en pantallas pequeñas */
   .cardContent > div {
     height: min-content;
     padding: auto;
     margin: 4px 0 4px 0 !important;
   }
+
+  /* Ajustes generales para las tarjetas en pantallas pequeñas */
   .card {
     margin: 0;
   }

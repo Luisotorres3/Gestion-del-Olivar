@@ -21,6 +21,7 @@ const Register = () => {
     validatePassword();
     if (error != null && error != true) {
       registerUser(name, email, password);
+      navigate("/");
     }
   };
 

@@ -2,7 +2,15 @@ import React, { useState } from "react";
 import FloatingLabel from "react-bootstrap/FloatingLabel";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
+import {
+  getAuth,
+  deleteUser,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+} from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 import styles from "./AccountDetails.module.css";
+import { doSignOut } from "../Auth";
 
 const AccountDetails = ({ user }) => {
   // Variables de estado del usuario
@@ -14,6 +22,7 @@ const AccountDetails = ({ user }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [profilePicture, setProfilePicture] = useState(user.photoURL || "");
   const [isUpdate, setIsUpdate] = useState(false);
+  const navigate = useNavigate();
 
   // Métodos para las acciones sobre un perfil de usuario
   const handleUpdate = () => {
@@ -37,8 +46,43 @@ const AccountDetails = ({ user }) => {
     setProfilePicture(user.photoURL || "");
   };
 
+  const handleLogout = () => {
+    doSignOut();
+  };
+
   const handleDeleteAccount = () => {
-    // Aquí iría la lógica para eliminar la cuenta
+    if (
+      !window.confirm(
+        "¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer."
+      )
+    ) {
+      return;
+    }
+
+    if (user) {
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        prompt(
+          "Por favor, ingresa tu contraseña para confirmar la eliminación de la cuenta:"
+        )
+      );
+
+      reauthenticateWithCredential(user, credential)
+        .then(() => {
+          return deleteUser(user);
+        })
+        .then(() => {
+          console.log("Cuenta eliminada correctamente.");
+          navigate("/");
+        })
+        .catch((error) => {
+          if (error.code === "auth/requires-recent-login") {
+            alert("Debes volver a iniciar sesión para eliminar tu cuenta.");
+          } else {
+            console.error("Error al eliminar la cuenta:", error);
+          }
+        });
+    }
   };
 
   const handleProfilePictureChange = (e) => {
@@ -164,6 +208,13 @@ const AccountDetails = ({ user }) => {
               Editar Perfil
             </Button>
           )}
+          <Button
+            variant="danger"
+            onClick={handleLogout}
+            className={styles.deleteButton}
+          >
+            Cerrar Sesión
+          </Button>
           <Button
             variant="danger"
             onClick={handleDeleteAccount}

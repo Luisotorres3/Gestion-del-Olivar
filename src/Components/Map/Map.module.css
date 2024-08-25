@@ -1,69 +1,86 @@
+/* Estilo del Popup para las características en el mapa */
 .olPopup {
-  position: absolute;
-  background-color: white;
-  -webkit-filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
-  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #cccccc;
-  bottom: 12px;
-  left: -50px;
-  width: max-content;
+  position: absolute; /* Posiciona el popup relativo a su elemento contenedor */
+  background-color: white; /* Color de fondo del popup */
+  -webkit-filter: drop-shadow(
+    0 1px 4px rgba(0, 0, 0, 0.2)
+  ); /* Efecto de sombra para navegadores Webkit */
+  filter: drop-shadow(
+    0 1px 4px rgba(0, 0, 0, 0.2)
+  ); /* Efecto de sombra para otros navegadores */
+  padding: 10px; /* Espaciado interno dentro del popup */
+  border-radius: 10px; /* Esquinas redondeadas del popup */
+  border: 1px solid #cccccc; /* Color y ancho del borde del popup */
+  bottom: 12px; /* Distancia desde la parte inferior del elemento contenedor */
+  left: -50px; /* Ajusta la posición horizontal del popup */
+  width: max-content; /* Ancho basado en el tamaño del contenido */
 }
+
+/* Flecha del Popup */
 .olPopup:after,
 .olPopup:before {
-  top: 100%;
-  border: solid transparent;
-  content: " ";
+  top: 100%; /* Posiciona la flecha en la parte inferior del popup */
+  border: solid transparent; /* Borde invisible para crear el efecto de flecha */
+  content: " "; /* Contenido vacío para el efecto de flecha */
   height: 0;
   width: 0;
-  position: absolute;
-  pointer-events: none;
+  position: absolute; /* Posicionamiento de la flecha */
+  pointer-events: none; /* Ignora los eventos del puntero para la flecha */
 }
+
 .olPopup:after {
-  border-top-color: white;
-  border-width: 10px;
-  left: 48px;
-  margin-left: -10px;
+  border-top-color: white; /* Color del extremo de la flecha */
+  border-width: 10px; /* Tamaño del extremo de la flecha */
+  left: 48px; /* Posición horizontal de la flecha */
+  margin-left: -10px; /* Centra la flecha horizontalmente */
 }
+
 .olPopup:before {
-  border-top-color: #cccccc;
-  border-width: 11px;
-  left: 48px;
-  margin-left: -11px;
+  border-top-color: #cccccc; /* Color del borde de la flecha */
+  border-width: 11px; /* Ancho del borde de la flecha */
+  left: 48px; /* Posición horizontal de la flecha */
+  margin-left: -11px; /* Centra la flecha horizontalmente */
 }
 
+/* Estilo del Popup para información adicional (e.g., detalles de Finca) */
 .olPopup2 {
-  color: white;
-  font-size: 1dvw;
+  color: white; /* Color del texto para el popup secundario */
+  font-size: 1dvw; /* Tamaño de fuente responsivo basado en el ancho del viewport */
 }
 
+/* Animación del Spinner de Carga */
 @keyframes spinner {
   to {
-    transform: rotate(360deg);
+    transform: rotate(360deg); /* Rote el spinner 360 grados */
   }
 }
 
 .spinner:after {
-  content: "";
-  box-sizing: border-box;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 40px;
-  height: 40px;
-  margin-top: -20px;
-  margin-left: -20px;
-  border-radius: 50%;
-  border: 5px solid rgba(180, 180, 180, 0.6);
-  border-top-color: rgba(0, 0, 0, 0.6);
-  animation: spinner 0.6s linear infinite;
+  content: ""; /* Contenido vacío para el spinner */
+  box-sizing: border-box; /* Asegura que el padding y el borde se incluyan en el ancho y alto total del elemento */
+  position: absolute; /* Posiciona el spinner relativo a su contenedor */
+  top: 50%; /* Centra verticalmente */
+  left: 50%; /* Centra horizontalmente */
+  width: 40px; /* Ancho del spinner */
+  height: 40px; /* Alto del spinner */
+  margin-top: -20px; /* Ajusta la posición vertical */
+  margin-left: -20px; /* Ajusta la posición horizontal */
+  border-radius: 50%; /* Hace el spinner circular */
+  border: 5px solid rgba(180, 180, 180, 0.6); /* Borde gris claro con transparencia */
+  border-top-color: rgba(
+    0,
+    0,
+    0,
+    0.6
+  ); /* Color del borde superior del spinner */
+  animation: spinner 0.6s linear infinite; /* Aplica la animación del spinner */
 }
 
+/* Estilo del Dropdown Selector de Fincas */
 .selectStyle {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  z-index: 1000;
-  padding: 10px;
+  position: absolute; /* Posiciona el dropdown relativo al mapa */
+  top: 0; /* Posiciona en la parte superior del contenedor del mapa */
+  left: 50%; /* Centra horizontalmente */
+  z-index: 1000; /* Asegura que aparezca encima de otros elementos */
+  padding: 10px; /* Espaciado interno dentro del dropdown */
 }

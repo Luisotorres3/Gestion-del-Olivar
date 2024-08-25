@@ -1,79 +1,38 @@
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./Dashboard.module.css";
 import { Tooltip } from "react-tooltip";
+import { Link } from "react-router-dom";
+
+// Componentes y utilidades personalizados
 import Card from "../../Components/Card/Card";
+import MapComp from "../../Components/Map/Map";
+import Forecast from "../../Components/ForecastComp/ForecastComp";
+import { PopupForm } from "../../Components/Fincas/ListaFincas";
+
+// Iconos e imágenes
 import plantation from "../../Images/Icons/plantation.png";
 import olive from "../../Images/Icons/oliveTree.png";
 import weather from "../../Images/Icons/weather.png";
 import production from "../../Images/Icons/production.png";
-import MapComp from "../../Components/Map/Map";
-import Forecast from "../../Components/ForecastComp/ForecastComp";
-import Carousel from "../../Utils/AlertsCarrousel";
 import video from "../../Images/Videos/weatherVideo.mp4";
+
+// Funciones de la base de datos
 import {
-  getAlerts,
   getCoordsForMarker,
   getFincas,
   getLocations,
-  getNumFincas,
   getNumFincasNuevas,
   getNumOlivos,
   getProduccionPrevista,
   getTemperaturaMedia,
 } from "../../Utils/Firebase/databaseFunctions";
-import { Link } from "react-router-dom";
-
-function Alertas({ alerts, showAlerts, handleShowAlerts }) {
-  if (alerts.length > 0) {
-    return (
-      <div
-        className={styles.alertas}
-        style={{
-          backgroundColor: showAlerts ? "whitesmoke" : "",
-          boxShadow: showAlerts ? "1px 1px 7px rgba(0, 0, 0, 0.15)" : " ",
-        }}
-      >
-        <div className={styles.navAlertas}>
-          <button
-            onClick={handleShowAlerts}
-            data-tooltip-id="alertas"
-            data-tooltip-content={
-              showAlerts ? "Cerrar Alertas" : "Mostrar Alertas"
-            }
-            data-tooltip-place="right"
-          >
-            <i className="fa fa-bell" aria-hidden="true"></i>
-          </button>
-          {showAlerts && (
-            <nav
-              className={`${styles.navAlertas} ${
-                showAlerts ? styles.showAlerts : ""
-              }`}
-              style={{
-                width: showAlerts === true ? "auto" : 0,
-                height: showAlerts === true ? "100%" : 0,
-              }}
-            >
-              <ul>
-                {alerts &&
-                  alerts.length > 0 &&
-                  alerts.map((item, i) => (
-                    <li key={item.id}>{item.message}</li>
-                  ))}
-              </ul>
-            </nav>
-          )}
-        </div>
-      </div>
-    );
-  }
-}
 
 function InformationCards() {
   const [tempMedia, setTempMedia] = useState(null);
   const [numFincas, setNumFincas] = useState(0);
   const [numOlivos, setNumOlivos] = useState(0);
 
+  // Fetch de datos para fincas y olivos
   const fetchFincas = async () => {
     try {
       const data = await getFincas();
@@ -82,10 +41,10 @@ function InformationCards() {
       setNumOlivos(data2);
     } catch (error) {
       console.error("Hubo un error al obtener las fincas:", error);
-      // Manejar el error según sea necesario
     }
   };
 
+  // Fetch de la temperatura media
   const obtenerTemperaturaMedia = async () => {
     try {
       const temperaturaMedia = await getTemperaturaMedia();
@@ -102,7 +61,7 @@ function InformationCards() {
 
   return (
     <>
-      {tempMedia ? (
+      {numFincas > 0 ? (
         <>
           <Card
             title={"Fincas"}
@@ -128,9 +87,7 @@ function InformationCards() {
           />
         </>
       ) : (
-        <div>
-          <h1>Cargando datos</h1>
-        </div>
+        <>Error cargando fincas</>
       )}
     </>
   );
@@ -140,7 +97,7 @@ function ForecastInformation({ locations, handleShowMoreForecast }) {
   return (
     <>
       <div className={styles.background}>
-        {/* Aquí establece el video o GIF como fondo */}
+        {/* Video de fondo */}
         <video autoPlay loop muted className={styles.video}>
           <source src={video} type="video/mp4" />
           Tu navegador no admite el elemento de video.
@@ -171,27 +128,27 @@ const Dashboard = () => {
   const mapRef = useRef();
   const [mapReady, setMapReady] = useState(false);
   const [showAlerts, setShowAlerts] = useState(null);
-  const alerts = getAlerts();
   const [locations, setLocations] = useState([]);
   const [markerCoords, setMarkerCoords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fincas, setFincas] = useState(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  async function fetchFincas() {
+    try {
+      const dataFincas = await getFincas();
+      const data = await getLocations();
+      const markerData = await getCoordsForMarker();
+      setFincas(dataFincas.data);
+      setLocations(data);
+      setMarkerCoords(markerData);
+      setLoading(false);
+    } catch (error) {
+      console.error("Hubo un error al obtener las fincas:", error);
+    }
+  }
 
   useEffect(() => {
     setMapReady(true);
-    async function fetchFincas() {
-      try {
-        const dataFincas = await getFincas();
-        const data = await getLocations();
-        const markerData = await getCoordsForMarker();
-        setFincas(dataFincas.data);
-        setLocations(data);
-        setMarkerCoords(markerData);
-        setLoading(false);
-      } catch (error) {
-        console.error("Hubo un error al obtener las fincas:", error);
-      }
-    }
 
     fetchFincas();
   }, []);
@@ -204,82 +161,92 @@ const Dashboard = () => {
     console.log("Show more");
   };
 
+  // Abre el formulario emergente
+  const openPopup = () => {
+    setIsPopupOpen(true);
+  };
+  // Cierra el formulario emergente
+  const closePopup = () => {
+    setIsPopupOpen(false);
+  };
+
+  if (loading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <h2>Cargando datos...</h2>
+      </div>
+    );
+  }
+
+  if (!fincas || fincas.length === 0) {
+    return (
+      <div className={styles.noFincasContainer}>
+        <h2>No hay fincas aún que gestionar</h2>
+        <button onClick={openPopup} className={styles.createFincaLink}>
+          Crear Finca
+        </button>
+        <PopupForm
+          isOpen={isPopupOpen}
+          onClose={closePopup}
+          fetchFincas={fetchFincas}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={styles.container}>
-      {!loading ? (
-        <>
-          <div className={styles.content}>
-            <div className={styles.estadisticas}>
-              <div className={styles.cardContent}>
-                {loading ? (
-                  <div>
-                    <h2>Cargando info</h2>
-                  </div>
-                ) : (
-                  <InformationCards />
-                )}
+      <div className={styles.content}>
+        <div className={styles.estadisticas}>
+          <div className={styles.cardContent}>
+            <InformationCards />
+          </div>
+          <div className={styles.mapContent}>
+            {mapReady && fincas.length > 0 ? (
+              <MapComp
+                ref={mapRef}
+                width="100%"
+                height="100%"
+                target={"map"}
+                zoom="17"
+                controls={true}
+                showFincas={true}
+                fincas={fincas}
+              />
+            ) : (
+              <div>
+                <h2>Cargando mapa</h2>
               </div>
-              <div className={styles.mapContent}>
-                {mapReady && fincas.length > 0 ? (
-                  <MapComp
-                    ref={mapRef}
-                    width="100%"
-                    height="100%"
-                    target={"map"}
-                    zoom="17"
-                    controls={true}
-                    showFincas={true}
-                    fincas={fincas}
-                  />
-                ) : (
-                  <div>
-                    <h2>Cargando mapa</h2>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className={`${styles.estadisticas} ${styles.secundario}`}>
-              <div className={`${styles.contentDiv} ${styles.smallMap}`}>
-                {markerCoords && (
-                  <MapComp
-                    target={"mapaLugares"}
-                    ref={mapRef}
-                    width="100%"
-                    height="100%"
-                    zoom="5"
-                    markerCoords={markerCoords}
-                  />
-                )}
-              </div>
-              <div className={`${styles.contentDiv} ${styles.forecast}`}>
-                <ForecastInformation
-                  locations={locations}
-                  handleShowMoreForecast={handleShowMoreForecast}
-                />
-              </div>
-
-              <div
-                className={`${styles.contentDiv} ${styles.notificationsDiv}`}
-              >
-                <Carousel alerts={alerts} />
-              </div>
-            </div>
+            )}
+          </div>
+        </div>
+        <div className={`${styles.estadisticas} ${styles.secundario}`}>
+          <div className={`${styles.contentDiv} ${styles.smallMap}`}>
+            {markerCoords && (
+              <MapComp
+                target={"mapaLugares"}
+                ref={mapRef}
+                width="100%"
+                height="100%"
+                zoom="5"
+                markerCoords={markerCoords}
+              />
+            )}
+          </div>
+          <div className={`${styles.contentDiv} ${styles.forecast}`}>
+            <ForecastInformation
+              locations={locations}
+              handleShowMoreForecast={handleShowMoreForecast}
+            />
           </div>
 
-          <Alertas
-            alerts={alerts}
-            showAlerts={showAlerts}
-            handleShowAlerts={handleShowAlerts}
-          />
-          {/* TOOLTIPS*/}
-          <Tooltip id="alertas" style={{ zIndex: "9999" }} />
-          <Tooltip id="verMas" style={{ zIndex: "9999" }} />
-        </>
-      ) : (
-        <div>
-          <h2>Cargando datos</h2>
+          <div
+            className={`${styles.contentDiv} ${styles.notificationsDiv}`}
+          ></div>
         </div>
-      )}
+      </div>
+      {/* TOOLTIPS */}
+      <Tooltip id="verMas" style={{ zIndex: "9999" }} />
     </div>
   );
 };
