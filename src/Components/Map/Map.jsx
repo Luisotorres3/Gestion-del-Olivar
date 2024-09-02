@@ -8,7 +8,7 @@ import Feature from "ol/Feature";
 import { Point, Polygon } from "ol/geom";
 import { Vector as VectorLayer } from "ol/layer";
 import { Vector as VectorSource } from "ol/source";
-import { fromLonLat, toLonLat } from "ol/proj";
+import { fromLonLat, toLonLat, transform } from "ol/proj";
 import { Fill, Icon, Stroke, Style } from "ol/style";
 import Overlay from "ol/Overlay";
 import { FullScreen, defaults as defaultControls } from "ol/control";
@@ -17,7 +17,100 @@ import { getCenter } from "ol/extent";
 import styles from "./Map.module.css";
 import { Tooltip } from "bootstrap";
 
-const exportLayerToImage = (map, vectorLayer) => {
+function exportPolygonMap(map, polygon) {
+  if (!polygon) {
+    console.error("No polygon selected.");
+    return;
+  }
+
+  // Fit the view to the polygon's extent
+  const extent = polygon.getExtent();
+  map.getView().fit(extent, { size: map.getSize(), maxZoom: 19 });
+
+  // Once the view is fitted, we need to wait until the map renders the new view
+  setTimeout(() => {
+    // Create a canvas to draw the map onto
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+
+    // Calculate the size of the canvas based on the polygon's extent
+    const resolution = map.getView().getResolution();
+    const width = Math.round((extent[2] - extent[0]) / resolution);
+    const height = Math.round((extent[3] - extent[1]) / resolution);
+    canvas.width = width;
+    canvas.height = height;
+
+    // Get the map's canvas
+    const mapCanvas = map.getViewport().querySelector("canvas");
+    if (!mapCanvas) {
+      console.error("No map canvas found.");
+      return;
+    }
+
+    // Draw the map onto our canvas
+    context.drawImage(
+      mapCanvas,
+      (extent[0] - map.getView().getCenter()[0]) / resolution +
+        mapCanvas.width / 2,
+      (map.getView().getCenter()[1] - extent[3]) / resolution +
+        mapCanvas.height / 2,
+      width,
+      height,
+      0,
+      0,
+      width,
+      height
+    );
+
+    // Normalize the polygon coordinates to the canvas dimensions
+    const coordinates = polygon.getCoordinates()[0].map((coord) => {
+      const x =
+        ((coord[0] - extent[0]) / (extent[2] - extent[0])) * canvas.width;
+      const y =
+        ((extent[3] - coord[1]) / (extent[3] - extent[1])) * canvas.height;
+      return [x, y];
+    });
+
+    // Clear the area outside the polygon
+    context.save();
+
+    // Draw the inverse polygon
+    context.beginPath();
+    context.moveTo(0, 0);
+    context.lineTo(canvas.width, 0);
+    context.lineTo(canvas.width, canvas.height);
+    context.lineTo(0, canvas.height);
+    context.closePath();
+
+    // Draw the polygon on top of the full canvas
+    context.moveTo(coordinates[0][0], coordinates[0][1]);
+    for (let i = 1; i < coordinates.length; i++) {
+      context.lineTo(coordinates[i][0], coordinates[i][1]);
+    }
+    context.closePath();
+
+    // Clear the area outside the polygon
+    context.fillStyle = "white"; // Set to the color you want for the outside
+    context.fill();
+    context.restore();
+
+    // Draw the polygon border again if needed
+    context.beginPath();
+    context.moveTo(coordinates[0][0], coordinates[0][1]);
+    for (let i = 1; i < coordinates.length; i++) {
+      context.lineTo(coordinates[i][0], coordinates[i][1]);
+    }
+    context.closePath();
+    context.strokeStyle = "blue";
+    context.lineWidth = 2;
+    context.stroke();
+
+    // Export the canvas as an image
+    const imgData = canvas.toDataURL("image/png");
+  }, 1000); // Delay to ensure the map view has finished rendering
+}
+
+const crearPol = (map, vectorLayer) => {
   if (!vectorLayer) {
     console.error("No hay capa vectorial disponible.");
     return;
@@ -43,20 +136,37 @@ const exportLayerToImage = (map, vectorLayer) => {
   const polygon = features[0].getGeometry();
   const extent = polygon.getExtent();
 
-  // Calcular tamaño del canvas
+  // Configurar el tamaño del canvas basado en la extensión del polígono
   const width = extent[2] - extent[0];
   const height = extent[3] - extent[1];
-  canvas.width = 500; // Tamaño de la imagen
-  canvas.height = 500;
+  canvas.width = width;
+  canvas.height = height;
 
-  // Normalizar coordenadas
+  // Dibujar el contenido del mapa en el canvas
+  const mapCanvas = map.getViewport().querySelector("canvas");
+  const mapContext = mapCanvas.getContext("2d");
+
+  // Escalar y traducir el contexto para ajustarlo al polígono
+  context.scale(
+    canvas.width / mapCanvas.width,
+    canvas.height / mapCanvas.height
+  );
+  context.translate(-extent[0], -extent[1]);
+
+  // Dibujar el mapa en el canvas
+  context.drawImage(mapCanvas, 0, 0, mapCanvas.width, mapCanvas.height);
+
+  // Volver a la escala original
+  context.setTransform(1, 0, 0, 1, 0, 0);
+
+  // Obtener las coordenadas del polígono y normalizarlas
   const coordinates = polygon.getCoordinates()[0].map((coord) => {
-    const x = (coord[0] - extent[0]) / width;
-    const y = (extent[3] - coord[1]) / height;
-    return [x * canvas.width, y * canvas.height];
+    const x = (coord[0] - extent[0]) * (canvas.width / width);
+    const y = (extent[3] - coord[1]) * (canvas.height / height);
+    return [x, y];
   });
 
-  // Dibujar el polígono en el canvas
+  // Dibujar el polígono en el canvas de mapa
   context.beginPath();
   context.moveTo(coordinates[0][0], coordinates[0][1]);
 
@@ -75,7 +185,7 @@ const exportLayerToImage = (map, vectorLayer) => {
   const imgData = canvas.toDataURL("image/png");
   const link = document.createElement("a");
   link.href = imgData;
-  link.download = "polygon.png";
+  link.download = "map_polygon.png";
   link.click();
 };
 
@@ -127,12 +237,15 @@ const MapComp = forwardRef((props, ref) => {
     currentCoords,
     editMode = false,
     onPolygonDrawn,
+    fillFinca = true,
+    setSelectedFinca,
   } = props;
 
   const mapRef = useRef();
   const [vectorSource, setVectorSource] = useState(null);
   const [drawInteraction, setDrawInteraction] = useState(null);
   const [vectorLayer, setVectorLayer] = useState(null);
+  const [polygon, setPolygon] = useState(false);
 
   useEffect(() => {
     let coordinates = [-416653.71, 4588115.81];
@@ -247,12 +360,14 @@ const MapComp = forwardRef((props, ref) => {
           const selectedOption = event.target.value;
           const selectedFinca = JSON.parse(selectedOption);
 
-          const coordinates = fromLonLat([
-            selectedFinca.localizacion.longitud,
-            selectedFinca.localizacion.latitud,
-          ]);
+          const coordinates = JSON.parse(selectedFinca.coordenadasFinca);
           if (coordinates) {
-            flyTo(coordinates, function () {}, mapRef.current.getView());
+            const polygon = new Polygon([coordinates]);
+            setPolygon(polygon);
+
+            // Ahora puedes usar `polygon` como necesites, por ejemplo, para calcular el centroide
+            const centroid = polygon.getInteriorPoint().getCoordinates();
+            flyTo(centroid, function () {}, mapRef.current.getView());
           }
         });
       }
@@ -311,6 +426,8 @@ const MapComp = forwardRef((props, ref) => {
       Array.isArray(fincas) &&
       fincas.length > 0
     ) {
+      const vectorSource = new VectorSource();
+      setVectorSource(vectorSource);
       const overlay = new Overlay({
         element: null,
         positioning: "center-center",
@@ -339,21 +456,35 @@ const MapComp = forwardRef((props, ref) => {
           features.push(polygonFeature);
         }
       });
-
-      const rectangleLayer = new VectorLayer({
-        source: new VectorSource({
-          features: features,
-        }),
-        style: new Style({
-          stroke: new Stroke({
-            color: "red",
-            width: 2,
+      let rectangleLayer;
+      if (fillFinca) {
+        rectangleLayer = new VectorLayer({
+          source: new VectorSource({
+            features: features,
           }),
-          fill: new Fill({
-            color: "rgba(255, 0, 0, 0.5)",
+          style: new Style({
+            stroke: new Stroke({
+              color: "red",
+              width: 2,
+            }),
+            fill: new Fill({
+              color: "rgba(255, 0, 0, 0.5)",
+            }),
           }),
-        }),
-      });
+        });
+      } else {
+        rectangleLayer = new VectorLayer({
+          source: new VectorSource({
+            features: features,
+          }),
+          style: new Style({
+            stroke: new Stroke({
+              color: "red",
+              width: 2,
+            }),
+          }),
+        });
+      }
 
       mapRef.current.addLayer(rectangleLayer);
 

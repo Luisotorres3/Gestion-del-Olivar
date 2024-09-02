@@ -71,6 +71,12 @@
   align-items: center;
 }
 
+.noPaddingSelect {
+  padding: 8px;
+  width: auto;
+  box-sizing: border-box; /* Asegura que el select ocupe el 100% del ancho */
+}
+
 .sliderContainer {
   display: flex;
   align-items: center;

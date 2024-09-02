@@ -82,24 +82,39 @@ export function PopupForm({ isOpen, onClose, fetchFincas, fincaToEdit }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      setCoords(await getCoordsForCity(formData.localizacion.municipio));
-      formData.localizacion.latitud = coords[0];
-      formData.localizacion.longitud = coords[1];
+      // Obtener las coordenadas y almacenarlas en una variable local
+      const coords = await getCoordsForCity(formData.localizacion.municipio);
+
+      // Asegúrate de que las coordenadas son válidas antes de continuar
+      if (!coords || coords.length < 2) {
+        throw new Error("No se pudieron obtener las coordenadas.");
+      }
+
+      // Actualizar el formulario con las coordenadas
+      const updatedFormData = {
+        ...formData,
+        localizacion: {
+          ...formData.localizacion,
+          latitud: coords[0],
+          longitud: coords[1],
+        },
+      };
 
       // Agregar el usuario actual a los datos del formulario
-      const newFincaData = { ...formData, usuario: currentUser };
+      const newFincaData = { ...updatedFormData, usuario: currentUser };
+
       if (fincaToEdit) {
         // Actualiza una finca existente
-
         await updateFinca(fincaToEdit.id, newFincaData);
       } else {
         // Crea una nueva finca
-        console.log(newFincaData);
         await createFinca(newFincaData);
       }
 
       fetchFincas(); // Refresca la lista de fincas
       onClose(); // Cierra el formulario
+
+      // Restablece el formulario
       setFormData({
         referenciaCatastral: "",
         localizacion: {
@@ -286,7 +301,9 @@ export function PopupForm({ isOpen, onClose, fetchFincas, fincaToEdit }) {
 
             <Button
               variant="primary"
-              onClick={() => cambiarDePagina(2)}
+              onClick={(e) => {
+                fincaToEdit ? handleSubmit(e) : cambiarDePagina(2);
+              }}
               disabled={
                 !formData.referenciaCatastral ||
                 !formData.localizacion.direccion ||

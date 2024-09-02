@@ -1,4 +1,5 @@
 import axios from "axios";
+import { load } from "cheerio";
 import { fetchWeatherApi } from "openmeteo";
 import { Line } from "react-chartjs-2";
 import {
@@ -337,7 +338,63 @@ export const getAlerts = () => {
 
 // ----------------------------------------------
 
-//GET PRODUCCION PREVISTA
-export const getProduccionPrevista = () => {
-  return getFincas().length;
+// GET PRODUCCION PREVISTA
+export const getProduccionPrevista = async (
+  numOlivos = 100,
+  rendimientoPorOlivo = 20,
+  rendimientoAceite = 0.18
+) => {
+  try {
+    const dataPrecios = await fetchOliveOilPrices();
+    if (dataPrecios && dataPrecios.length > 0) {
+      // Convertir el precio a un número y eliminar caracteres no numéricos
+      const precioVenta = parseFloat(
+        dataPrecios[0].precio.replace("€", "").replace(",", ".").trim()
+      );
+
+      // 1. Cálculo de la producción de aceitunas (kg)
+      const produccionAceitunas = numOlivos * rendimientoPorOlivo;
+
+      // 2. Cálculo de la producción de aceite (litros)
+      const produccionAceite = produccionAceitunas * rendimientoAceite;
+
+      // 3. Cálculo del beneficio
+      const ingresos = produccionAceite * precioVenta;
+
+      // Devolver todos los valores calculados
+      return {
+        produccionAceitunas,
+        produccionAceite,
+        ingresos,
+      };
+    } else {
+      // Retorna 0 o algún valor predeterminado si no se pueden obtener los precios
+      return {
+        produccionAceitunas: 0,
+        produccionAceite: 0,
+        ingresos: 0,
+      };
+    }
+  } catch (error) {
+    console.error("Error al calcular la producción prevista:", error);
+    // Retorna 0 o algún valor predeterminado en caso de error
+    return {
+      produccionAceitunas: 0,
+      produccionAceite: 0,
+      ingresos: 0,
+      beneficio: 0,
+    };
+  }
+};
+
+// FETCH PRECIO ACEITE DE OLIVA
+export const fetchOliveOilPrices = async () => {
+  try {
+    // Realiza la solicitud a Infaoliva
+    const { data } = await axios.get(`${baseURLDatabase}/api/precio_aceite`);
+    return data;
+  } catch (error) {
+    console.error("Error al obtener los precios:", error.message);
+    return [];
+  }
 };

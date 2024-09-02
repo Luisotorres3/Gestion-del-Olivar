@@ -18,6 +18,7 @@ import video from "../../Images/Videos/weatherVideo.mp4";
 
 // Funciones de la base de datos
 import {
+  fetchOliveOilPrices,
   getCoordsForMarker,
   getFincas,
   getLocations,
@@ -31,6 +32,11 @@ function InformationCards() {
   const [tempMedia, setTempMedia] = useState(null);
   const [numFincas, setNumFincas] = useState(0);
   const [numOlivos, setNumOlivos] = useState(0);
+  const [productionPrevista, setProduccionPrevista] = useState({
+    produccionAceitunas: 0,
+    produccionAceite: 0,
+    ingresos: 0,
+  });
 
   // Fetch de datos para fincas y olivos
   const fetchFincas = async () => {
@@ -54,10 +60,29 @@ function InformationCards() {
     }
   };
 
+  // Fetch de la producción prevista
+  const fetchProduccionPrevista = async (numOlivos) => {
+    try {
+      const prod = await getProduccionPrevista(numOlivos);
+      setProduccionPrevista(prod);
+    } catch (error) {
+      console.error("Error al obtener la producción prevista:", error);
+    }
+  };
+
   useEffect(() => {
-    fetchFincas();
-    obtenerTemperaturaMedia();
+    const fetchData = async () => {
+      await fetchFincas();
+      await obtenerTemperaturaMedia();
+    };
+    fetchData();
   }, []);
+
+  useEffect(() => {
+    if (numOlivos > 0) {
+      fetchProduccionPrevista(numOlivos);
+    }
+  }, [numOlivos]);
 
   return (
     <>
@@ -72,7 +97,9 @@ function InformationCards() {
           <Card
             title={"Olivos"}
             content={numOlivos}
-            extra={numOlivos / numFincas + " olivos medios por finca"}
+            extra={
+              (numOlivos / numFincas).toFixed(0) + " olivos medios por finca"
+            }
             img={olive}
           />
           <Card
@@ -81,9 +108,11 @@ function InformationCards() {
             img={weather}
           />
           <Card
-            title={"Producción prevista"}
-            content={getProduccionPrevista()}
+            title={"Producción aprox"}
+            content={`${productionPrevista.produccionAceitunas} kg`}
+            content_extra={`${productionPrevista.produccionAceite} litros`}
             img={production}
+            extra={`${productionPrevista.ingresos} €`}
           />
         </>
       ) : (
@@ -133,6 +162,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [fincas, setFincas] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [prices, setPrices] = useState([]);
   async function fetchFincas() {
     try {
       const dataFincas = await getFincas();
@@ -147,10 +177,19 @@ const Dashboard = () => {
     }
   }
 
+  async function fetchPrecioAceite() {
+    try {
+      const dataPrecios = await fetchOliveOilPrices();
+      setPrices(dataPrecios);
+    } catch (error) {
+      console.error("Hubo un error al obtener las fincas:", error);
+    }
+  }
+
   useEffect(() => {
     setMapReady(true);
-
     fetchFincas();
+    fetchPrecioAceite();
   }, []);
 
   const handleShowAlerts = () => {
@@ -239,10 +278,45 @@ const Dashboard = () => {
               handleShowMoreForecast={handleShowMoreForecast}
             />
           </div>
-
-          <div
-            className={`${styles.contentDiv} ${styles.notificationsDiv}`}
-          ></div>
+          <div className={`${styles.contentDiv} ${styles.preciosDiv}`}>
+            <div className={styles.preciosTabla}>
+              <ul className={styles.headerRow}>
+                <li className={styles.headerCell}>
+                  <h5>Tipo de aceite</h5>
+                </li>
+                <li className={styles.headerCell}>
+                  <h5>Variedad</h5>
+                </li>
+                <li
+                  className={styles.headerCell}
+                  style={{ position: "relative" }}
+                >
+                  <h5>Precio</h5>
+                  <a
+                    href="https://www.infaoliva.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.infoButton}
+                  >
+                    <i className="fa fa-info-circle" aria-hidden="true"></i>
+                  </a>
+                </li>
+              </ul>
+              {prices.map((price, index) => (
+                <ul className={styles.dataRow} key={index}>
+                  <li className={styles.dataCell}>
+                    <h4>{price.tipo}</h4>
+                  </li>
+                  <li className={styles.dataCell}>
+                    <h4>{price.variedad}</h4>
+                  </li>
+                  <li className={styles.dataCell}>
+                    <h4>{price.precio}</h4>
+                  </li>
+                </ul>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
       {/* TOOLTIPS */}
