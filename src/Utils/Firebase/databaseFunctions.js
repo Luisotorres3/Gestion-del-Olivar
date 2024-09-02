@@ -25,7 +25,7 @@ ChartJS.register(
 );
 
 const baseURLDatabase =
-  "http://localhost:5000/gestiondelolivar-48d30/us-central1/app";
+  "https://us-central1-gestiondelolivar-48d30.cloudfunctions.net/app";
 
 //GET FINCAS
 export const getFincas = async () => {
@@ -33,6 +33,7 @@ export const getFincas = async () => {
   const user = auth.currentUser;
   const userId = user.uid;
   try {
+    console.log(baseURLDatabase);
     const response = await axios.get(`${baseURLDatabase}/api/fincas`, {
       params: { userId },
     });
