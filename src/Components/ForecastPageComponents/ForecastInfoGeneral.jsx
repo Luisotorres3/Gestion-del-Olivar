@@ -39,7 +39,7 @@ function ForecastInfoGeneral({ fincas, selectedFinca, setSelectedFinca }) {
     try {
       const coords = await getCoordsForCity(selectedFinca);
       const response = await fetch(
-        `http://api.geonames.org/timezoneJSON?formatted=true&lat=${coords[0]}&lng=${coords[1]}&username=luisotorres`
+        `https://api.geonames.org/timezoneJSON?formatted=true&lat=${coords[0]}&lng=${coords[1]}&username=luisotorres`
       );
       const data = await response.json();
       setSelectedDate(data.time); // Date time should be in ISO format
