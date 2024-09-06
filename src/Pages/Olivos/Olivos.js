@@ -7,7 +7,6 @@ import { getFincas } from "../../Utils/Firebase/databaseFunctions";
 
 const Olivos = () => {
   const mapRef = useRef();
-  const [showPhoto, setShowPhoto] = useState(false);
   const [uploadedImage, setUploadedImage] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [processedImage, setProcessedImage] = useState(null);
@@ -18,7 +17,26 @@ const Olivos = () => {
   const [numOlivosDetectados, setNumOlivosDetectados] = useState(null);
   const [fincas, setFincas] = useState(null);
 
-  const [selectedFinca, setSelectedFinca] = useState(null);
+  const [polygon, setPolygon] = useState(null);
+  const [activeMode, setActiveMode] = useState("modoMapa");
+  const [mapInitialized, setMapInitialized] = useState(false);
+
+  const handleModeChange = (mode) => {
+    if (activeMode === mode) {
+      setActiveMode("modoMapa"); // Volver a modoMapa si se selecciona el mismo modo
+    } else {
+      setActiveMode(mode); // Cambiar al nuevo modo
+      setProcessedImage(null);
+      setUploadedImage(null);
+      setNumOlivosDetectados(null);
+    }
+
+    if (activeMode !== "modoFinca") setPolygon(null);
+  };
+
+  const handlePolygon = (polygon) => {
+    setPolygon(polygon);
+  };
 
   // Fetch de datos para fincas y olivos
   const fetchFincas = async () => {
@@ -29,6 +47,7 @@ const Olivos = () => {
       console.error("Hubo un error al obtener las fincas:", error);
     }
   };
+
   useEffect(() => {
     fetchFincas();
   }, []);
@@ -39,6 +58,16 @@ const Olivos = () => {
       setUploadedImage(file);
     }
   };
+
+  // Usar un efecto para esperar a que el mapa esté completamente inicializado
+  useEffect(() => {
+    if (mapRef.current) {
+      // Esto asegura que el mapa ha sido montado y está disponible
+      setMapInitialized(true);
+    } else {
+      setMapInitialized(false);
+    }
+  }, [activeMode, polygon]);
 
   const exportMapImage = async () => {
     setLoading(true);
@@ -70,174 +99,82 @@ const Olivos = () => {
       }
     };
 
-    if (showPhoto && uploadedImage) {
-      // Procesar imagen cargada
+    if (uploadedImage) {
       await processImage(uploadedImage);
-    } else {
-      // Procesar imagen del mapa
-      mapRef.current.once("rendercomplete", async function () {
-        const mapCanvas = document.createElement("canvas");
-        const size = mapRef.current.getSize();
-        mapCanvas.width = size[0];
-        mapCanvas.height = size[1];
-        const mapContext = mapCanvas.getContext("2d");
+    } else if (activeMode === "modoMapa") {
+      if (mapInitialized && mapRef.current) {
+        // Esperar hasta que el mapa esté completamente inicializado antes de interactuar con él
+        mapRef.current.once("rendercomplete", async function () {
+          const mapCanvas = document.createElement("canvas");
+          const size = mapRef.current.getSize();
+          mapCanvas.width = size[0];
+          mapCanvas.height = size[1];
+          const mapContext = mapCanvas.getContext("2d");
 
-        Array.prototype.forEach.call(
-          mapRef.current
-            .getViewport()
-            .querySelectorAll(".ol-layer canvas, canvas.ol-layer"),
-          function (canvas) {
-            if (canvas.width > 0) {
-              const opacity =
-                canvas.parentNode.style.opacity || canvas.style.opacity;
-              mapContext.globalAlpha = opacity === "" ? 1 : Number(opacity);
+          Array.prototype.forEach.call(
+            mapRef.current
+              .getViewport()
+              .querySelectorAll(".ol-layer canvas, canvas.ol-layer"),
+            function (canvas) {
+              if (canvas.width > 0) {
+                const opacity =
+                  canvas.parentNode.style.opacity || canvas.style.opacity;
+                mapContext.globalAlpha = opacity === "" ? 1 : Number(opacity);
 
-              let matrix;
-              const transform = canvas.style.transform;
-              if (transform) {
-                matrix = transform
-                  .match(/^matrix\(([^\(]*)\)$/)[1]
-                  .split(",")
-                  .map(Number);
-              } else {
-                matrix = [
-                  parseFloat(canvas.style.width) / canvas.width,
-                  0,
-                  0,
-                  parseFloat(canvas.style.height) / canvas.height,
-                  0,
-                  0,
-                ];
+                let matrix;
+                const transform = canvas.style.transform;
+                if (transform) {
+                  matrix = transform
+                    .match(/^matrix\(([^\(]*)\)$/)[1]
+                    .split(",")
+                    .map(Number);
+                } else {
+                  matrix = [
+                    parseFloat(canvas.style.width) / canvas.width,
+                    0,
+                    0,
+                    parseFloat(canvas.style.height) / canvas.height,
+                    0,
+                    0,
+                  ];
+                }
+
+                CanvasRenderingContext2D.prototype.setTransform.apply(
+                  mapContext,
+                  matrix
+                );
+
+                const backgroundColor = canvas.parentNode.style.backgroundColor;
+                if (backgroundColor) {
+                  mapContext.fillStyle = backgroundColor;
+                  mapContext.fillRect(0, 0, canvas.width, canvas.height);
+                }
+
+                mapContext.drawImage(canvas, 0, 0);
               }
-
-              CanvasRenderingContext2D.prototype.setTransform.apply(
-                mapContext,
-                matrix
-              );
-
-              const backgroundColor = canvas.parentNode.style.backgroundColor;
-              if (backgroundColor) {
-                mapContext.fillStyle = backgroundColor;
-                mapContext.fillRect(0, 0, canvas.width, canvas.height);
-              }
-
-              mapContext.drawImage(canvas, 0, 0);
             }
-          }
-        );
+          );
 
-        mapContext.globalAlpha = 1;
-        mapContext.setTransform(1, 0, 0, 1, 0, 0);
+          mapContext.globalAlpha = 1;
+          mapContext.setTransform(1, 0, 0, 1, 0, 0);
 
-        // Convertir el canvas a data URL y establecerlo como imagen seleccionada
-        const dataURL = mapCanvas.toDataURL();
-        setSelectedImage(dataURL);
+          const dataURL = mapCanvas.toDataURL();
+          setSelectedImage(dataURL);
 
-        // Convertir el canvas a Blob y procesar la imagen
-        mapCanvas.toBlob(async function (blob) {
-          await processImage(blob);
+          mapCanvas.toBlob(async function (blob) {
+            await processImage(blob);
+          });
         });
-      });
 
-      mapRef.current.renderSync();
+        if (mapRef) mapRef.current.renderSync();
+      } else {
+        console.error("El mapa aún no está inicializado.");
+        setLoading(false);
+      }
+    } else {
+      if (polygon) await processImage(polygon);
     }
   };
-
-  function exportPolygonMap(map, polygon) {
-    if (!polygon) {
-      console.error("No polygon selected.");
-      return;
-    }
-    const imgData = null;
-
-    // Fit the view to the polygon's extent
-    const extent = polygon.getExtent();
-    map.getView().fit(extent, { size: map.getSize(), maxZoom: 19 });
-
-    // Once the view is fitted, we need to wait until the map renders the new view
-    setTimeout(() => {
-      // Create a canvas to draw the map onto
-      const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d");
-
-      // Calculate the size of the canvas based on the polygon's extent
-      const resolution = map.getView().getResolution();
-      const width = Math.round((extent[2] - extent[0]) / resolution);
-      const height = Math.round((extent[3] - extent[1]) / resolution);
-      canvas.width = width;
-      canvas.height = height;
-
-      // Get the map's canvas
-      const mapCanvas = map.getViewport().querySelector("canvas");
-      if (!mapCanvas) {
-        console.error("No map canvas found.");
-        return;
-      }
-
-      // Draw the map onto our canvas
-      context.drawImage(
-        mapCanvas,
-        (extent[0] - map.getView().getCenter()[0]) / resolution +
-          mapCanvas.width / 2,
-        (map.getView().getCenter()[1] - extent[3]) / resolution +
-          mapCanvas.height / 2,
-        width,
-        height,
-        0,
-        0,
-        width,
-        height
-      );
-
-      // Normalize the polygon coordinates to the canvas dimensions
-      const coordinates = polygon.getCoordinates()[0].map((coord) => {
-        const x =
-          ((coord[0] - extent[0]) / (extent[2] - extent[0])) * canvas.width;
-        const y =
-          ((extent[3] - coord[1]) / (extent[3] - extent[1])) * canvas.height;
-        return [x, y];
-      });
-
-      // Clear the area outside the polygon
-      context.save();
-
-      // Draw the inverse polygon
-      context.beginPath();
-      context.moveTo(0, 0);
-      context.lineTo(canvas.width, 0);
-      context.lineTo(canvas.width, canvas.height);
-      context.lineTo(0, canvas.height);
-      context.closePath();
-
-      // Draw the polygon on top of the full canvas
-      context.moveTo(coordinates[0][0], coordinates[0][1]);
-      for (let i = 1; i < coordinates.length; i++) {
-        context.lineTo(coordinates[i][0], coordinates[i][1]);
-      }
-      context.closePath();
-
-      // Clear the area outside the polygon
-      context.fillStyle = "white"; // Set to the color you want for the outside
-      context.fill();
-      context.restore();
-
-      // Draw the polygon border again if needed
-      context.beginPath();
-      context.moveTo(coordinates[0][0], coordinates[0][1]);
-      for (let i = 1; i < coordinates.length; i++) {
-        context.lineTo(coordinates[i][0], coordinates[i][1]);
-      }
-      context.closePath();
-      context.strokeStyle = "blue";
-      context.lineWidth = 2;
-      context.stroke();
-
-      // Export the canvas as an image
-      imgData = canvas.toDataURL("image/png");
-    }, 1000); // Delay to ensure the map view has finished rendering
-
-    return imgData;
-  }
 
   return (
     <div className={styles.container}>
@@ -252,7 +189,7 @@ const Olivos = () => {
                 setProcessedImage(null);
                 setDownloadUrl(null);
               }}
-              className={styles.noPaddingSelect} // Aplica la clase CSS
+              className={styles.noPaddingSelect}
             >
               <option value="1">Método Fácil (Algoritmo HSV y LBP)</option>
               <option value="2">
@@ -273,7 +210,7 @@ const Olivos = () => {
                 variant="contained"
                 color="primary"
                 onClick={exportMapImage}
-                style={{ marginRight: "5px" }} // Ajuste correcto de estilo
+                style={{ marginRight: "5px" }}
               >
                 Procesar Imagen
               </Button>
@@ -294,13 +231,32 @@ const Olivos = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={showPhoto}
-                    onChange={() => setShowPhoto(!showPhoto)}
+                    checked={activeMode === "modoFinca"}
+                    onChange={() => handleModeChange("modoFinca")}
                   />
                 }
-                label="Mapa/Imagen"
+                label="Detectar en Finca"
               />
-              {showPhoto && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={activeMode === "modoMapa"}
+                    onChange={() => handleModeChange("modoMapa")}
+                  />
+                }
+                label="Mapa"
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={activeMode === "modoImagen"}
+                    onChange={() => handleModeChange("modoImagen")}
+                  />
+                }
+                label="Imagen"
+              />
+
+              {activeMode === "modoImagen" && (
                 <input
                   type="file"
                   accept="image/*"
@@ -312,15 +268,15 @@ const Olivos = () => {
           <div className={`${styles.contentDiv} ${styles.images}`}>
             <div className={styles.imagesDiv}>
               <h3>Imagen original</h3>
-              {showPhoto ? (
+              {uploadedImage ? (
                 <>
-                  {uploadedImage && (
+                  {
                     <img
                       src={URL.createObjectURL(uploadedImage)}
                       alt="Selected"
                       style={{ width: "100%", height: "100%" }}
                     />
-                  )}
+                  }
                 </>
               ) : (
                 <MapComp
@@ -332,7 +288,8 @@ const Olivos = () => {
                   zoom="19"
                   controls={true}
                   fillFinca={false}
-                  fincas={fincas}
+                  fincas={activeMode === "modoFinca" ? fincas : null}
+                  setPolygon={handlePolygon}
                 />
               )}
             </div>

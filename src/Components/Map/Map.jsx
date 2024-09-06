@@ -20,174 +20,75 @@ import { Tooltip } from "bootstrap";
 function exportPolygonMap(map, polygon) {
   if (!polygon) {
     console.error("No polygon selected.");
-    return;
+    return Promise.reject("No polygon selected.");
   }
 
-  // Fit the view to the polygon's extent
-  const extent = polygon.getExtent();
-  map.getView().fit(extent, { size: map.getSize(), maxZoom: 19 });
+  return new Promise((resolve, reject) => {
+    // Ajustar la vista al área del polígono
+    const extent = polygon.getExtent();
+    map.getView().fit(extent, { size: map.getSize(), maxZoom: 19 });
 
-  // Once the view is fitted, we need to wait until the map renders the new view
-  setTimeout(() => {
-    // Create a canvas to draw the map onto
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
+    setTimeout(() => {
+      try {
+        // Obtener el tamaño del canvas del mapa
+        const mapCanvas = map.getViewport().querySelector("canvas");
+        if (!mapCanvas) {
+          console.error("No map canvas found.");
+          return reject("No map canvas found.");
+        }
 
-    // Calculate the size of the canvas based on the polygon's extent
-    const resolution = map.getView().getResolution();
-    const width = Math.round((extent[2] - extent[0]) / resolution);
-    const height = Math.round((extent[3] - extent[1]) / resolution);
-    canvas.width = width;
-    canvas.height = height;
+        // Crear un nuevo canvas del mismo tamaño que el mapa visible
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        const mapSize = map.getSize();
+        canvas.width = mapSize[0];
+        canvas.height = mapSize[1];
 
-    // Get the map's canvas
-    const mapCanvas = map.getViewport().querySelector("canvas");
-    if (!mapCanvas) {
-      console.error("No map canvas found.");
-      return;
-    }
+        // Dibujar la imagen completa del mapa en el nuevo canvas
+        context.drawImage(mapCanvas, 0, 0);
 
-    // Draw the map onto our canvas
-    context.drawImage(
-      mapCanvas,
-      (extent[0] - map.getView().getCenter()[0]) / resolution +
-        mapCanvas.width / 2,
-      (map.getView().getCenter()[1] - extent[3]) / resolution +
-        mapCanvas.height / 2,
-      width,
-      height,
-      0,
-      0,
-      width,
-      height
-    );
+        // Obtener las coordenadas del polígono (sin normalizar)
+        const coordinates = polygon.getCoordinates()[0];
 
-    // Normalize the polygon coordinates to the canvas dimensions
-    const coordinates = polygon.getCoordinates()[0].map((coord) => {
-      const x =
-        ((coord[0] - extent[0]) / (extent[2] - extent[0])) * canvas.width;
-      const y =
-        ((extent[3] - coord[1]) / (extent[3] - extent[1])) * canvas.height;
-      return [x, y];
-    });
+        // Normalizar las coordenadas del polígono con respecto al nuevo canvas
+        const normalizedCoords = coordinates.map((coord) => {
+          const pixel = map.getPixelFromCoordinate(coord);
+          return [pixel[0], pixel[1]]; // Devuelve las coordenadas de píxeles en el canvas
+        });
 
-    // Clear the area outside the polygon
-    context.save();
+        // Crear la máscara de recorte usando las coordenadas del polígono
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.save();
+        context.beginPath();
 
-    // Draw the inverse polygon
-    context.beginPath();
-    context.moveTo(0, 0);
-    context.lineTo(canvas.width, 0);
-    context.lineTo(canvas.width, canvas.height);
-    context.lineTo(0, canvas.height);
-    context.closePath();
+        normalizedCoords.forEach((coord, index) => {
+          if (index === 0) {
+            context.moveTo(coord[0], coord[1]);
+          } else {
+            context.lineTo(coord[0], coord[1]);
+          }
+        });
+        context.closePath();
 
-    // Draw the polygon on top of the full canvas
-    context.moveTo(coordinates[0][0], coordinates[0][1]);
-    for (let i = 1; i < coordinates.length; i++) {
-      context.lineTo(coordinates[i][0], coordinates[i][1]);
-    }
-    context.closePath();
+        // Aplicar el recorte para que solo el área dentro del polígono sea visible
+        context.clip();
 
-    // Clear the area outside the polygon
-    context.fillStyle = "white"; // Set to the color you want for the outside
-    context.fill();
-    context.restore();
+        // Redibujar la imagen dentro del área del polígono
+        context.drawImage(mapCanvas, 0, 0);
 
-    // Draw the polygon border again if needed
-    context.beginPath();
-    context.moveTo(coordinates[0][0], coordinates[0][1]);
-    for (let i = 1; i < coordinates.length; i++) {
-      context.lineTo(coordinates[i][0], coordinates[i][1]);
-    }
-    context.closePath();
-    context.strokeStyle = "blue";
-    context.lineWidth = 2;
-    context.stroke();
+        context.restore();
 
-    // Export the canvas as an image
-    const imgData = canvas.toDataURL("image/png");
-  }, 1000); // Delay to ensure the map view has finished rendering
-}
-
-const crearPol = (map, vectorLayer) => {
-  if (!vectorLayer) {
-    console.error("No hay capa vectorial disponible.");
-    return;
-  }
-
-  const vectorSource = vectorLayer.getSource();
-  if (!vectorSource) {
-    console.error("No hay fuente vectorial disponible.");
-    return;
-  }
-
-  const features = vectorSource.getFeatures();
-  if (features.length === 0) {
-    console.error("No hay características en la capa vectorial.");
-    return;
-  }
-
-  // Crear un canvas
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-
-  // Obtener la geometría del primer polígono dibujado
-  const polygon = features[0].getGeometry();
-  const extent = polygon.getExtent();
-
-  // Configurar el tamaño del canvas basado en la extensión del polígono
-  const width = extent[2] - extent[0];
-  const height = extent[3] - extent[1];
-  canvas.width = width;
-  canvas.height = height;
-
-  // Dibujar el contenido del mapa en el canvas
-  const mapCanvas = map.getViewport().querySelector("canvas");
-  const mapContext = mapCanvas.getContext("2d");
-
-  // Escalar y traducir el contexto para ajustarlo al polígono
-  context.scale(
-    canvas.width / mapCanvas.width,
-    canvas.height / mapCanvas.height
-  );
-  context.translate(-extent[0], -extent[1]);
-
-  // Dibujar el mapa en el canvas
-  context.drawImage(mapCanvas, 0, 0, mapCanvas.width, mapCanvas.height);
-
-  // Volver a la escala original
-  context.setTransform(1, 0, 0, 1, 0, 0);
-
-  // Obtener las coordenadas del polígono y normalizarlas
-  const coordinates = polygon.getCoordinates()[0].map((coord) => {
-    const x = (coord[0] - extent[0]) * (canvas.width / width);
-    const y = (extent[3] - coord[1]) * (canvas.height / height);
-    return [x, y];
+        // Exportar el canvas como imagen en base64 sin el prefijo
+        const imgData = canvas.toDataURL();
+        canvas.toBlob(async function (blob) {
+          resolve(blob);
+        });
+      } catch (error) {
+        reject(error);
+      }
+    }, 1000); // Esperar a que el mapa se renderice completamente
   });
-
-  // Dibujar el polígono en el canvas de mapa
-  context.beginPath();
-  context.moveTo(coordinates[0][0], coordinates[0][1]);
-
-  for (let i = 1; i < coordinates.length; i++) {
-    context.lineTo(coordinates[i][0], coordinates[i][1]);
-  }
-
-  context.closePath();
-  context.fillStyle = "rgba(0, 0, 255, 0.2)";
-  context.strokeStyle = "blue";
-  context.lineWidth = 2;
-  context.fill();
-  context.stroke();
-
-  // Exportar el canvas como imagen
-  const imgData = canvas.toDataURL("image/png");
-  const link = document.createElement("a");
-  link.href = imgData;
-  link.download = "map_polygon.png";
-  link.click();
-};
+}
 
 function flyTo(location, done, view) {
   const duration = 4000;
@@ -238,14 +139,25 @@ const MapComp = forwardRef((props, ref) => {
     editMode = false,
     onPolygonDrawn,
     fillFinca = true,
-    setSelectedFinca,
+    setPolygon,
   } = props;
 
   const mapRef = useRef();
   const [vectorSource, setVectorSource] = useState(null);
   const [drawInteraction, setDrawInteraction] = useState(null);
   const [vectorLayer, setVectorLayer] = useState(null);
-  const [polygon, setPolygon] = useState(false);
+
+  const [polygonUsed, setPolygonUsed] = useState(null);
+
+  const handlePolygon = (polygon) => {
+    exportPolygonMap(mapRef.current, polygon)
+      .then((imgData) => {
+        setPolygon(imgData); // Guardar la imagen procesada
+      })
+      .catch((error) => {
+        console.error("Error al exportar el polígono:", error);
+      });
+  };
 
   useEffect(() => {
     let coordinates = [-416653.71, 4588115.81];
@@ -292,14 +204,6 @@ const MapComp = forwardRef((props, ref) => {
     });
 
     mapRef.current = map;
-    /*
-    mapRef.current.on("loadstart", function () {
-      mapRef.current.getTargetElement().classList.add("spinner");
-    });
-    mapRef.current.on("loadend", function () {
-      mapRef.current.getTargetElement().classList.remove("spinner");
-    });
-    */
 
     fullScreenControl.on("enterfullscreen", () => {
       const tooltipElements = document.querySelectorAll(".ol-full-screen-true");
@@ -363,11 +267,12 @@ const MapComp = forwardRef((props, ref) => {
           const coordinates = JSON.parse(selectedFinca.coordenadasFinca);
           if (coordinates) {
             const polygon = new Polygon([coordinates]);
-            setPolygon(polygon);
 
             // Ahora puedes usar `polygon` como necesites, por ejemplo, para calcular el centroide
             const centroid = polygon.getInteriorPoint().getCoordinates();
+
             flyTo(centroid, function () {}, mapRef.current.getView());
+            if (setPolygon) handlePolygon(polygon);
           }
         });
       }
@@ -410,6 +315,27 @@ const MapComp = forwardRef((props, ref) => {
 
       setDrawInteraction(draw);
       map.addInteraction(draw);
+    }
+
+    if (fincas && fincas.length > 0) {
+      const firstFinca = fincas[0];
+      if (firstFinca.data.coordenadasFinca) {
+        // Convertir coordenadasFinca en un array de coordenadas
+        const coordenadasArray = JSON.parse(firstFinca.data.coordenadasFinca);
+
+        // Crear un polígono con las coordenadas
+        const polygon = new Polygon([coordenadasArray]);
+        const extent = polygon.getExtent();
+        coordinates = getCenter(extent); // Obtener el centro del polígono
+        setPolygonUsed(polygon);
+        if (setPolygon) handlePolygon(polygonUsed);
+      } else {
+        // Si no hay coordenadasFinca, usa las coordenadas de localizacion
+        coordinates = fromLonLat([
+          firstFinca.data.localizacion.longitud,
+          firstFinca.data.localizacion.latitud,
+        ]);
+      }
     }
 
     return () => {
@@ -602,7 +528,7 @@ const MapComp = forwardRef((props, ref) => {
     if (ref) {
       ref.current = mapRef.current;
     }
-  }, [ref]);
+  }, [ref, setPolygon]);
 
   return (
     <div

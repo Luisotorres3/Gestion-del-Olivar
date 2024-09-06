@@ -33,7 +33,6 @@ export const getFincas = async () => {
   const user = auth.currentUser;
   const userId = user.uid;
   try {
-    console.log(baseURLDatabase);
     const response = await axios.get(`${baseURLDatabase}/api/fincas`, {
       params: { userId },
     });

@@ -45,8 +45,12 @@ function LinksSocial() {
         </a>
       </li>
       <li>
-        <a href="" target="_blank" rel="noreferrer">
-          Link 3
+        <a
+          href="mailto:luisotorres@correo.ugr.es"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Contáctame por email
           <i
             className="fa fa-long-arrow-right"
             aria-hidden="true"
@@ -192,18 +196,16 @@ const Contact = () => {
               <div>
                 <h3 className={styles.h3Contact}>Agradecimientos</h3>
                 <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                  Vestibulum eget ex sed nulla condimentum tincidunt. Integer
-                  tincidunt purus vel felis scelerisque, at pharetra lorem
-                  finibus. Pellentesque auctor laoreet felis, at scelerisque
-                  urna viverra eu. Sed efficitur est id enim scelerisque, quis
-                  convallis neque suscipit. Suspendisse potenti. Aenean
-                  fermentum, libero nec blandit ultrices, dui augue venenatis
-                  elit, nec faucibus quam velit eu nulla. Vestibulum vel metus
-                  ut mi tristique dignissim. Integer nec velit ut libero
-                  efficitur ullamcorper. Vivamus eget orci at felis interdum
-                  condimentum eget eget ante. Nam convallis dui ut ex gravida,
-                  non ultricies urna tincidunt.
+                  Quiero expresar mi sincero agradecimiento a todas las personas
+                  que han contribuido a la realización de este proyecto. En
+                  primer lugar, agradezco a mi tutor, Jesús Chamorro Martínez,
+                  por su orientación y apoyo continuo. También agradezco a mis
+                  compañeros y a mi familia por su paciencia y aliento durante
+                  el desarrollo de este trabajo. Sin su ayuda, este proyecto no
+                  hubiera sido posible. Y por último, pero no menos importante,
+                  a mi padre, quien ha sido un ejemplo a seguir y con el cual he
+                  trabajado mano a mano para el desarrollo de este proyecto,
+                  motivándome y apoyándome siempre.
                 </p>
               </div>
               <hr />
