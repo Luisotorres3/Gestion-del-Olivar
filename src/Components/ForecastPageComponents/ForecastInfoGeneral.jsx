@@ -2,7 +2,10 @@ import React, { useEffect, useState } from "react";
 import styles from "../../Pages/Forecast/Forecast.module.css";
 import SelectFincas from "./SelectFincas";
 import useWeather from "../../Hooks/useWeather";
-import { getCoordsForCity } from "../../Utils/Firebase/databaseFunctions";
+import {
+  fetchGeonames,
+  getCoordsForCity,
+} from "../../Utils/Firebase/databaseFunctions";
 import { WeatherSvg } from "weather-icons-animated";
 import {
   mapWeatherCodeToDescription,
@@ -35,18 +38,15 @@ function ForecastInfoGeneral({ fincas, selectedFinca, setSelectedFinca }) {
   const [selectedDate, setSelectedDate] = useState("");
   const { weather, error, loading } = useWeather(selectedFinca);
 
-  const fetchCurrentDate = async () => {
+  async function fetchCurrentDate() {
     try {
       const coords = await getCoordsForCity(selectedFinca);
-      const response = await fetch(
-        `http://api.geonames.org/timezoneJSON?formatted=true&lat=${coords[0]}&lng=${coords[1]}&username=luisotorres`
-      );
-      const data = await response.json();
-      setSelectedDate(data.time); // Date time should be in ISO format
+      const response = await fetchGeonames(coords[0], coords[1]);
+      setSelectedDate(response.time);
     } catch (error) {
-      console.error("Error fetching current date:", error);
+      console.error("Hubo un error al obtener las fincas:", error);
     }
-  };
+  }
 
   useEffect(() => {
     if (selectedFinca) {

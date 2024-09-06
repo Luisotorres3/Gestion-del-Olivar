@@ -398,3 +398,17 @@ export const fetchOliveOilPrices = async () => {
     return [];
   }
 };
+
+// FETCH PRECIO ACEITE DE OLIVA
+export const fetchGeonames = async (lat, lng) => {
+  try {
+    // Realiza la solicitud a Infaoliva
+    const { data } = await axios.get(
+      `${baseURLDatabase}/api/geonames?lat=${lat}&lng=${lng}`
+    );
+    return data;
+  } catch (error) {
+    console.error("Error al obtener los precios:", error.message);
+    return [];
+  }
+};
